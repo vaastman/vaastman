@@ -77,13 +77,7 @@ export function SecondTwoRow({
       form.setValue("domainOrMainSubject", "");
     }
 
-    if (selectedSession) {
-      form.setValue("collegeFee", selectedSession.fees ?? "");
-      form.setValue("duration", selectedSession.duration ?? "");
-    } else {
-      form.setValue("collegeFee", "");
-      form.setValue("duration", "");
-    }
+    form.setValue("duration", selectedSession?.duration ?? "");
   }, [
     selectedUniversity,
     selectedCollegeId,
@@ -91,6 +85,7 @@ export function SecondTwoRow({
     selectedCollegeSessionId,
     selectedSession,
     form.setValue,
+    form.getValues,
   ]);
 
   return (
@@ -195,20 +190,6 @@ export function SecondTwoRow({
           </Field>
         )}
       />
-
-      {/* <Controller
-        control={form.control}
-        name="collegeFee"
-        render={({ field, fieldState }) => (
-          <Field>
-            <FieldLabel>College Fee</FieldLabel>
-            <FieldContent>
-              <Input {...field} disabled aria-invalid={fieldState.invalid} />
-              <FieldError errors={[fieldState.error]} />
-            </FieldContent>
-          </Field>
-        )}
-      /> */}
 
       <Controller
         control={form.control}

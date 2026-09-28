@@ -1,9 +1,43 @@
-import { createId } from "@paralleldrive/cuid2";
-import { redirect } from "next/navigation";
-
-export const dynamic = "force-dynamic";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { startCandidateRegistration } from "./lib/actions";
 
 export default function Page() {
-  const cuid = createId();
-  redirect(`/add/candidate/${cuid}`);
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-2xl flex-col justify-center gap-8 px-4 py-12 sm:px-6">
+      <header className="text-center">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
+          Vaastman Solutions
+        </h1>
+      </header>
+
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Candidate Registration</CardTitle>
+          <CardDescription>
+            Fill in your personal and education details to complete your
+            registration.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center text-muted-foreground">
+          Have your contact, profile, and education information ready before you
+          begin.
+        </CardContent>
+        <CardFooter className="justify-center">
+          <form action={startCandidateRegistration}>
+            <Button type="submit" size="lg">
+              Start form
+            </Button>
+          </form>
+        </CardFooter>
+      </Card>
+    </main>
+  );
 }

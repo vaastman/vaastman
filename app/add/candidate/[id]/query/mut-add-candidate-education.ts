@@ -25,7 +25,7 @@ export function useAddCandidateEducation({
         queryKey: ["candidate-education", candidateId],
       });
       toast.success("Education details saved.");
-      router.push(`/checkout/${candidateId}`);
+      router.push(`/add/candidate/${candidateId}/success`);
     },
     onError: (error) => {
       toast.error(error.message);

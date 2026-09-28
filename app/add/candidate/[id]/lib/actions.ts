@@ -125,6 +125,7 @@ export async function addCandidateEducationAction(
         domainOrMainSubject: parsedData.data.domainOrMainSubject,
         mjcSubject: parsedData.data.mjcSubject,
       },
+      select: { id: true, candidateId: true },
     });
 
     return { success: true, data: createdEducation };
@@ -141,41 +142,6 @@ export async function addCandidateEducationAction(
       success: false,
       message: "Something went wrong while saving candidate details",
     };
-  }
-}
-
-export async function getCandidateEducationColleges() {
-  try {
-    const colleges = await prisma.college.findMany({
-      select: {
-        id: true,
-        name: true,
-        sessions: {
-          where: {
-            status: "ACTIVE",
-          },
-          select: {
-            id: true,
-            name: true,
-            fees: true,
-            duration: true,
-          },
-        },
-        domains: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-
-    return { success: true, data: colleges };
-  } catch {
-    return { success: false, message: "Failed to fetch colleges" };
   }
 }
 
@@ -196,7 +162,6 @@ export async function getUniversity() {
               select: {
                 id: true,
                 name: true,
-                fees: true,
                 duration: true,
               },
             },

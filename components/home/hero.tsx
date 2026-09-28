@@ -201,15 +201,15 @@ export function Hero() {
 
         {/* ── Stars Rating & Badge ────────────────────────────────────────── */}
 
-        <h1 className="flex flex-wrap items-baseline justify-center gap-y-1.5 text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+        <h1 className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1.5 text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:gap-x-3 sm:text-6xl lg:text-7xl">
           <span className="vs-fade-up" style={{ animationDelay: "80ms" }}>
             <Highlight text="Vaastman" />
           </span>
           <span
-            className="vs-fade-up vs-highlight relative font-normal text-foreground"
+            className="vs-fade-up relative font-normal text-foreground"
             style={{ animationDelay: "160ms" }}
           >
-            Solutions
+            <span className="vs-highlight">Solutions</span>
             <span className="absolute -right-2 top-0 translate-x-full font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 sm:-right-4 sm:top-1">
               Pvt Ltd
             </span>

@@ -33,7 +33,6 @@ export function AddCandidateEducationForm({
       collegeRoll: "",
       collegeId: "",
       collegeSessionId: "",
-      collegeFee: "",
       duration: "",
       domainOrMainSubject: "",
       mjcSubject: "",
