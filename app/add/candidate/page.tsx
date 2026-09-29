@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StartFormButton } from "./_components/start-form-button";
-import { startCandidateRegistration } from "./lib/actions";
 
 export default function Page() {
   return (
@@ -31,9 +30,7 @@ export default function Page() {
           begin.
         </CardContent>
         <CardFooter className="justify-center">
-          <form action={startCandidateRegistration}>
-            <StartFormButton />
-          </form>
+          <StartFormButton />
         </CardFooter>
       </Card>
     </main>
