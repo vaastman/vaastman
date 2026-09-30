@@ -122,6 +122,7 @@ export async function addCandidateEducationAction(
         // marks: Number(parsedData.data.marks),
         collegeFee: selectedSession.fees,
         duration: selectedSession.duration,
+        course: parsedData.data.course,
         domainOrMainSubject: parsedData.data.domainOrMainSubject,
         mjcSubject: parsedData.data.mjcSubject,
       },

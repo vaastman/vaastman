@@ -5,6 +5,7 @@ model Candidate_Personal {
   phone        String
   fatherName   String
   profilePhoto String
+  aadharPhoto  String?
   gender       Gender
   dateOfBirth  String
 
@@ -33,6 +34,7 @@ model Candidate_Education {
   marks               Float?
   collegeFee          String
   duration            String
+  course              String?
   domainOrMainSubject String
   mjcSubject          String
   candidate           Candidate_Personal @relation(fields: [candidateId], references: [id], onDelete: Cascade)

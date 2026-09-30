@@ -34,6 +34,7 @@ export function AddCandidateEducationForm({
       collegeId: "",
       collegeSessionId: "",
       duration: "",
+      course: "",
       domainOrMainSubject: "",
       mjcSubject: "",
     },

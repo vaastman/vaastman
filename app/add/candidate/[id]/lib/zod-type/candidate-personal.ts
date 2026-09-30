@@ -11,6 +11,10 @@ export const addCandidatePersonalSchema = z.object({
     .string()
     .trim()
     .min(1, { error: "Profile photo is required" }),
+  aadharPhoto: z
+    .string()
+    .trim()
+    .min(1, { error: "Aadhar photo is required" }),
   gender: z.enum(Gender, { error: "Gender is required" }),
   dateOfBirth: z.string().trim().min(1, { error: "Date of birth is required" }),
 });
@@ -18,3 +22,4 @@ export const addCandidatePersonalSchema = z.object({
 export type AddCandidatePersonalSchema = z.infer<
   typeof addCandidatePersonalSchema
 >;
+

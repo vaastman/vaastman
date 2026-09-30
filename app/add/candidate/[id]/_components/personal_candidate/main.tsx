@@ -17,6 +17,7 @@ import {
   addCandidatePersonalSchema,
 } from "../../lib/zod-type/candidate-personal";
 import { useAddCandidatePersonal } from "../../query/mut-add-candidate-personal";
+import { AadharUploadRow } from "./aadhar-upload-row";
 import { FirstTwoRow } from "./first-2-row";
 import { SecondTwoRow } from "./second-2-row";
 
@@ -34,6 +35,7 @@ export function AddCandidatePersonalForm({
       phone: "",
       fatherName: "",
       profilePhoto: "",
+      aadharPhoto: "",
       gender: "MALE",
       dateOfBirth: "",
     },
@@ -58,6 +60,7 @@ export function AddCandidatePersonalForm({
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <FirstTwoRow form={form} />
             <SecondTwoRow form={form} />
+            <AadharUploadRow form={form} />
           </div>
         </CardContent>
         <CardFooter className="justify-center">
@@ -76,3 +79,4 @@ export function AddCandidatePersonalForm({
     </form>
   );
 }
+

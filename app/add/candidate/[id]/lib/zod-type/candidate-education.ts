@@ -16,11 +16,15 @@ export const addCandidateEducationSchema = z.object({
   collegeId: z.string().trim().min(1, { error: "College name is required" }),
   collegeSessionId: z.string().trim().min(1, { error: "Session is required" }),
   duration: z.string().trim().min(1, { error: "Duration is required" }),
+  course: z
+    .string()
+    .trim()
+    .min(1, { error: "Course is required" }),
+  mjcSubject: z.string().trim().min(1, { error: "MJC subject is required" }),
   domainOrMainSubject: z
     .string()
     .trim()
     .min(1, { error: "Domain/Main subject is required" }),
-  mjcSubject: z.string().trim().min(1, { error: "MJC subject is required" }),
 });
 
 export type AddCandidateEducationSchema = z.infer<
