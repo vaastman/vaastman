@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { StartFormButton } from "./_components/start-form-button";
+import { startCandidateRegistration } from "./lib/actions";
 
 export default function Page() {
   return (
@@ -30,7 +31,11 @@ export default function Page() {
           begin.
         </CardContent>
         <CardFooter className="justify-center">
-          <StartFormButton />
+          <form action={startCandidateRegistration}>
+            <Button type="submit" size="lg">
+              Start form
+            </Button>
+          </form>
         </CardFooter>
       </Card>
     </main>
