@@ -9,7 +9,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const MAX_FILE_SIZE = 50 * 1024; // 50KB max upload size
+const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB max upload size
 const ALLOWED_FILE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         {
-          error: `File size too large. Maximum size is ${MAX_FILE_SIZE / 1024}KB.`,
+          error: `File size too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`,
         },
         { status: 400 },
       );
@@ -119,3 +119,4 @@ export async function POST(request: Request) {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
