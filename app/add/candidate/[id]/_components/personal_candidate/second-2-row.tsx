@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import {
   Field,
   FieldContent,
-  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
@@ -85,7 +84,7 @@ export function SecondTwoRow({
                     setSelectedFile(null);
                     form.setError("profilePhoto", {
                       type: "validate",
-                      message: `File size too large. Maximum size is ${MAX_PROFILE_PHOTO_FILE_SIZE / 1024}KB.`,
+                      message: `File size too large. Maximum size is ${MAX_PROFILE_PHOTO_FILE_SIZE / (1024 * 1024)}MB.`,
                     });
                     event.target.value = "";
                     return;
@@ -143,9 +142,7 @@ export function SecondTwoRow({
                 )}
               </InputGroupAddon>
             </InputGroup>
-            {!fieldState.error ? (
-              <FieldDescription>Choose an image (max 50KB).</FieldDescription>
-            ) : null}
+
             <FieldError errors={[fieldState.error]} />
           </FieldContent>
         </Field>

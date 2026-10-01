@@ -5,7 +5,7 @@ export const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ] as const;
 
-export const MAX_PROFILE_PHOTO_FILE_SIZE = 50 * 1024;
+export const MAX_PROFILE_PHOTO_FILE_SIZE = 8 * 1024 * 1024;
 
 export type UploadResponse = {
   url?: string;
