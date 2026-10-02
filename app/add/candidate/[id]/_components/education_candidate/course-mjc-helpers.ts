@@ -24,6 +24,7 @@ export const COURSE_MJC_MAP: Record<
     { label: "PA (Public Administration)", value: "PA" },
     { label: "Sociology", value: "SOCIOLOGY" },
     { label: "Psychology", value: "PSYCHOLOGY" },
+    { label: "Geography", value: "GEOGRAPHY" },
     { label: "Home Science", value: "HOME_SCIENCE" },
     {
       label: "AIAS (Ancient Indian & Asian Studies)",
