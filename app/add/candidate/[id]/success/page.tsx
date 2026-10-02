@@ -9,6 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
+import { OfferLetterPreview } from "./_components/offer-letter-preview";
+import { getOfferLetterData } from "./lib/actions";
 
 export default async function Page({
   params,
@@ -25,9 +27,11 @@ export default async function Page({
     notFound();
   }
 
+  const offerLetterResult = await getOfferLetterData(id);
+
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-2xl items-center px-4 py-12 sm:px-6">
-      <Card className="w-full text-center">
+    <main className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6">
+      {/* <Card className="w-full text-center">
         <CardHeader>
           <CardTitle className="text-2xl">
             Form submitted successfully
@@ -42,7 +46,22 @@ export default async function Page({
             <Link href="/home">Return home</Link>
           </Button>
         </CardFooter>
-      </Card>
+      </Card> */}
+
+      {/* Offer Letter section */}
+      {offerLetterResult.success && offerLetterResult.data && (
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold">
+              Your Internship Acceptance Letter
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Preview and download your offer letter below
+            </p>
+          </div>
+          <OfferLetterPreview data={offerLetterResult.data} />
+        </div>
+      )}
     </main>
   );
 }

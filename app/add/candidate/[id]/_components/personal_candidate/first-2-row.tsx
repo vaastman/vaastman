@@ -36,6 +36,7 @@ export function FirstTwoRow({
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
+                className="uppercase"
                 placeholder="Enter full name"
               />
               <FieldError errors={[fieldState.error]} />
@@ -54,6 +55,7 @@ export function FirstTwoRow({
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
+                className="uppercase"
                 placeholder="name@example.com"
                 type="email"
               />
@@ -73,6 +75,7 @@ export function FirstTwoRow({
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
+                className="uppercase"
                 placeholder="Enter phone number"
                 type="tel"
               />
@@ -92,7 +95,28 @@ export function FirstTwoRow({
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
+                className="uppercase"
                 placeholder="Enter father name"
+              />
+              <FieldError errors={[fieldState.error]} />
+            </FieldContent>
+          </Field>
+        )}
+      />
+
+      <Controller
+        control={form.control}
+        name="aadharNo"
+        render={({ field, fieldState }) => (
+          <Field>
+            <FieldLabel requiredLable>Aadhar No</FieldLabel>
+            <FieldContent>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                className="uppercase"
+                placeholder="Enter aadhar number"
+                type="number"
               />
               <FieldError errors={[fieldState.error]} />
             </FieldContent>

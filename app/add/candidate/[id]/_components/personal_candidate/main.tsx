@@ -34,6 +34,7 @@ export function AddCandidatePersonalForm({
       email: "",
       phone: "",
       fatherName: "",
+      aadharNo: "",
       profilePhoto: "",
       aadharPhoto: "",
       gender: "MALE",
@@ -79,4 +80,3 @@ export function AddCandidatePersonalForm({
     </form>
   );
 }
-

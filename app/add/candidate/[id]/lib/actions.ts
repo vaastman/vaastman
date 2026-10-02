@@ -31,6 +31,17 @@ export async function addCandidatePersonalAction(
     return { success: false, message: ErrorTypes.ALREADY_EXISTS };
   }
 
+  const existingAadhar = await prisma.candidate_Personal.findUnique({
+    where: { aadharNo: parsedData.data.aadharNo },
+  });
+
+  if (existingAadhar) {
+    return {
+      success: false,
+      message: "Candidate with this Aadhar number already exists",
+    };
+  }
+
   try {
     const createdCandidate = await prisma.candidate_Personal.create({
       data: parsedData.data,
@@ -39,6 +50,12 @@ export async function addCandidatePersonalAction(
     return { success: true, data: createdCandidate };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return {
+          success: false,
+          message: "Candidate with this Aadhar number already exists",
+        };
+      }
       return { success: false, message: "Unable to save candidate details" };
     }
 

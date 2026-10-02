@@ -12,10 +12,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import type { AddCandidateEducationSchema } from "../../lib/zod-type/candidate-education";
-import {
-  COURSE_OPTIONS,
-  getMjcOptionsForCourse,
-} from "./course-mjc-helpers";
+import { COURSE_OPTIONS, getMjcOptionsForCourse } from "./course-mjc-helpers";
 
 export function FirstTwoRow({
   form,
@@ -41,6 +38,7 @@ export function FirstTwoRow({
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
+                className="uppercase"
                 placeholder="Enter university roll"
               />
               <FieldError errors={[fieldState.error]} />
@@ -59,6 +57,7 @@ export function FirstTwoRow({
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
+                className="uppercase"
                 placeholder="Enter college roll"
               />
               <FieldError errors={[fieldState.error]} />
@@ -84,9 +83,7 @@ export function FirstTwoRow({
                   form.setValue("mjcSubject", "");
                 }}
               >
-                <NativeSelectOption value="">
-                  Select course
-                </NativeSelectOption>
+                <NativeSelectOption value="">Select course</NativeSelectOption>
                 {COURSE_OPTIONS.map((option) => (
                   <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}

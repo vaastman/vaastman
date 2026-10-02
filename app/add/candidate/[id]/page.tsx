@@ -83,16 +83,10 @@ export default function Page() {
 
       <Tabs value={currentTab} className="gap-4">
         <TabsList className="sr-only">
-          <TabsTrigger
-            disabled={currentTab !== "personal"}
-            value="personal"
-          >
+          <TabsTrigger disabled={currentTab !== "personal"} value="personal">
             Personal
           </TabsTrigger>
-          <TabsTrigger
-            disabled={currentTab !== "education"}
-            value="education"
-          >
+          <TabsTrigger disabled={currentTab !== "education"} value="education">
             Education
           </TabsTrigger>
         </TabsList>

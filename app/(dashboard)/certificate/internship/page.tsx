@@ -12,6 +12,10 @@ import { jsPDF } from "jspdf";
 import { domToJpeg } from "modern-screenshot";
 import { useRef, useState } from "react";
 import { useGetOldStudents } from "@/app/(dashboard)/lib/old-student/query/use-get-old-students";
+import {
+  AttendanceSheet,
+  type AttendanceSheetData,
+} from "@/app/download/internship/_components/attendance-sheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,10 +47,6 @@ import {
   type CertificateData,
   InternshipCertificate,
 } from "./_components/internship-certificate";
-import {
-  AttendanceSheet,
-  type AttendanceSheetData,
-} from "@/app/download/internship/_components/attendance-sheet";
 
 /** A4 dimensions in mm */
 const A4_LANDSCAPE = { w: 297, h: 210 };

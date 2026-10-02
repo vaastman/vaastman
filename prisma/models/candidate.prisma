@@ -4,6 +4,7 @@ model Candidate_Personal {
   email        String
   phone        String
   fatherName   String
+  aadharNo     String  @unique
   profilePhoto String
   aadharPhoto  String?
   gender       Gender

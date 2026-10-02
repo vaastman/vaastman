@@ -18,7 +18,10 @@ export function AadharPhotoPreviewButton({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <InputGroupButton aria-label="Preview uploaded aadhar" variant="default">
+        <InputGroupButton
+          aria-label="Preview uploaded aadhar"
+          variant="default"
+        >
           <IconEyeFilled className="size-5" data-icon="inline-start" />
           Preview
         </InputGroupButton>
