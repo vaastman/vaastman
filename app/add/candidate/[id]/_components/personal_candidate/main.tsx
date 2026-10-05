@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { LoadingSwap } from "@/components/ui/loading-swap";
+import type { Candidate_Personal } from "@/lib/generated/prisma/client";
 import {
   type AddCandidatePersonalSchema,
   addCandidatePersonalSchema,
@@ -23,22 +24,26 @@ import { SecondTwoRow } from "./second-2-row";
 
 export function AddCandidatePersonalForm({
   candidateId,
+  existingData,
 }: {
   candidateId: string;
+  existingData: Candidate_Personal | null;
 }) {
+  const isEdit = Boolean(existingData);
+
   const form = useForm<AddCandidatePersonalSchema>({
     resolver: zodResolver(addCandidatePersonalSchema),
     defaultValues: {
       id: candidateId,
-      name: "",
-      email: "",
-      phone: "",
-      fatherName: "",
-      aadharNo: "",
-      profilePhoto: "",
-      aadharPhoto: "",
-      gender: "MALE",
-      dateOfBirth: "",
+      name: existingData?.name ?? "",
+      email: existingData?.email ?? "",
+      phone: existingData?.phone ?? "",
+      fatherName: existingData?.fatherName ?? "",
+      aadharNo: existingData?.aadharNo ?? "",
+      profilePhoto: existingData?.profilePhoto ?? "",
+      aadharPhoto: existingData?.aadharPhoto ?? "",
+      gender: existingData?.gender ?? "MALE",
+      dateOfBirth: existingData?.dateOfBirth ?? "",
     },
   });
 
@@ -58,7 +63,7 @@ export function AddCandidatePersonalForm({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <FirstTwoRow form={form} />
             <SecondTwoRow form={form} />
             <AadharUploadRow form={form} />
@@ -72,7 +77,7 @@ export function AddCandidatePersonalForm({
             className="px-8 text-base"
           >
             <LoadingSwap isLoading={isPending}>
-              Save Personal Details
+              {isEdit ? "Update & Continue" : "Save Personal Details"}
             </LoadingSwap>
           </Button>
         </CardFooter>

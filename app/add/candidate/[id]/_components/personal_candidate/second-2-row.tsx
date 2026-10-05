@@ -1,6 +1,6 @@
 "use client";
 
-import { IconPhotoFilled } from "@tabler/icons-react";
+import { IconLoader2, IconPhotoFilled } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/input-group";
 import type { AddCandidatePersonalSchema } from "../../lib/zod-type/candidate-personal";
 import { ProfilePhotoPreviewButton } from "./profile-photo-preview-button";
-import { ProfilePhotoUploadButton } from "./profile-photo-upload-button";
 import {
   ACCEPTED_IMAGE_TYPES,
   isAcceptedImageType,
@@ -32,17 +31,78 @@ export function SecondTwoRow({
 }: {
   form: UseFormReturn<AddCandidatePersonalSchema>;
 }) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState(form.getValues("profilePhoto"));
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const watchedPhoto = form.watch("profilePhoto");
+
   useEffect(() => {
-    const currentValue = form.getValues("profilePhoto");
-    if (currentValue) {
-      setPreviewUrl(currentValue);
+    if (watchedPhoto && !isUploading) {
+      setPreviewUrl(watchedPhoto);
     }
-  }, [form]);
+  }, [watchedPhoto, isUploading]);
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    fieldOnChange: (value: string) => void,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!isAcceptedImageType(file)) {
+      form.setError("profilePhoto", {
+        type: "validate",
+        message: "Please upload a valid image file (JPEG, PNG, JPG, or WebP).",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (!isWithinProfilePhotoSizeLimit(file)) {
+      form.setError("profilePhoto", {
+        type: "validate",
+        message: `File size too large. Maximum size is ${MAX_PROFILE_PHOTO_FILE_SIZE / (1024 * 1024)}MB.`,
+      });
+      event.target.value = "";
+      return;
+    }
+
+    form.clearErrors("profilePhoto");
+
+    // Instant local preview for immediate visual confirmation
+    const localUrl = URL.createObjectURL(file);
+    setPreviewUrl(localUrl);
+    setIsUploading(true);
+
+    try {
+      const uploadedUrl = await uploadProfilePhoto(file, "profile");
+      setPreviewUrl(uploadedUrl);
+      fieldOnChange(uploadedUrl);
+      form.setValue("profilePhoto", uploadedUrl, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      toast.success("Profile photo uploaded!");
+    } catch (error) {
+      setPreviewUrl(form.getValues("profilePhoto") || "");
+      form.setError("profilePhoto", {
+        type: "server",
+        message:
+          error instanceof Error ? error.message : "Failed to upload image.",
+      });
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      URL.revokeObjectURL(localUrl);
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   return (
     <Controller
@@ -61,38 +121,7 @@ export function SecondTwoRow({
                 aria-invalid={fieldState.invalid}
                 name={field.name}
                 onBlur={field.onBlur}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-
-                  if (!file) {
-                    setSelectedFile(null);
-                    return;
-                  }
-
-                  if (!isAcceptedImageType(file)) {
-                    setSelectedFile(null);
-                    form.setError("profilePhoto", {
-                      type: "validate",
-                      message:
-                        "Please upload a valid image file (JPEG, PNG, JPG, or WebP).",
-                    });
-                    event.target.value = "";
-                    return;
-                  }
-
-                  if (!isWithinProfilePhotoSizeLimit(file)) {
-                    setSelectedFile(null);
-                    form.setError("profilePhoto", {
-                      type: "validate",
-                      message: `File size too large. Maximum size is ${MAX_PROFILE_PHOTO_FILE_SIZE / (1024 * 1024)}MB.`,
-                    });
-                    event.target.value = "";
-                    return;
-                  }
-
-                  form.clearErrors("profilePhoto");
-                  setSelectedFile(file);
-                }}
+                onChange={(event) => handleFileChange(event, field.onChange)}
                 ref={(node) => {
                   field.ref(node);
                   fileInputRef.current = node;
@@ -100,46 +129,14 @@ export function SecondTwoRow({
                 type="file"
               />
               <InputGroupAddon align="inline-end">
-                {previewUrl && !selectedFile ? (
+                {isUploading ? (
+                  <div className="flex items-center gap-1.5 px-2 text-xs font-medium text-muted-foreground">
+                    <IconLoader2 className="size-4 animate-spin" />
+                    <span>Uploading...</span>
+                  </div>
+                ) : previewUrl ? (
                   <ProfilePhotoPreviewButton previewUrl={previewUrl} />
-                ) : (
-                  <ProfilePhotoUploadButton
-                    hasSelectedFile={Boolean(selectedFile)}
-                    isUploading={isUploading}
-                    onUpload={async () => {
-                      if (!selectedFile) {
-                        return;
-                      }
-
-                      setIsUploading(true);
-
-                      try {
-                        const uploadedUrl =
-                          await uploadProfilePhoto(selectedFile);
-
-                        setPreviewUrl(uploadedUrl);
-                        setSelectedFile(null);
-                        field.onChange(uploadedUrl);
-                        form.clearErrors("profilePhoto");
-                        toast.success("Image uploaded", { duration: 1200 });
-
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
-                        }
-                      } catch (error) {
-                        form.setError("profilePhoto", {
-                          type: "server",
-                          message:
-                            error instanceof Error
-                              ? error.message
-                              : "Failed to upload image.",
-                        });
-                      } finally {
-                        setIsUploading(false);
-                      }
-                    }}
-                  />
-                )}
+                ) : null}
               </InputGroupAddon>
             </InputGroup>
 

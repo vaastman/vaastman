@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { useGetRegisteredStudents } from "@/app/(dashboard)/dashboard/registered-students/[collegeId]/query/use-get-registered-students";
+import { CandidateActions } from "./candidate-actions";
 import { CandidateCell } from "./candidate-cell";
 import { PaymentStatusBadge } from "./payment-status-badge";
 
@@ -40,5 +41,10 @@ export const columns: ColumnDef<RegisteredStudentsRow>[] = [
     cell: ({ row }) => (
       <PaymentStatusBadge status={row.original.paymentStatus} />
     ),
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-right">Actions</div>,
+    cell: ({ row }) => <CandidateActions candidate={row.original} />,
   },
 ];

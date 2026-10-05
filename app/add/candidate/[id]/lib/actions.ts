@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { ErrorTypes } from "@/lib/error-type";
 import { Prisma } from "@/lib/generated/prisma/client";
 import {
   type AddCandidateEducationSchema,
@@ -11,6 +10,42 @@ import {
   type AddCandidatePersonalSchema,
   addCandidatePersonalSchema,
 } from "./zod-type/candidate-personal";
+
+/**
+ * Fetch existing candidate personal + education data for a given candidate ID.
+ * Used to pre-fill the form on refresh and determine which tab to show.
+ */
+export async function getCandidateProgress(candidateId: string) {
+  try {
+    const personal = await prisma.candidate_Personal.findUnique({
+      where: { id: candidateId },
+    });
+
+    const education = personal
+      ? await prisma.candidate_Education.findFirst({
+          where: { candidateId },
+          include: {
+            college: {
+              select: { universityId: true },
+            },
+          },
+        })
+      : null;
+
+    return {
+      success: true,
+      data: {
+        personal,
+        education,
+      },
+    };
+  } catch {
+    return {
+      success: false,
+      message: "Failed to fetch candidate progress",
+    };
+  }
+}
 
 export async function addCandidatePersonalAction(
   data: AddCandidatePersonalSchema,
@@ -23,19 +58,12 @@ export async function addCandidatePersonalAction(
     };
   }
 
-  const candidate = await prisma.candidate_Personal.findUnique({
-    where: { id: parsedData.data.id },
-  });
-
-  if (candidate) {
-    return { success: false, message: ErrorTypes.ALREADY_EXISTS };
-  }
-
+  // Check if another candidate (different ID) already has this Aadhar number
   const existingAadhar = await prisma.candidate_Personal.findUnique({
     where: { aadharNo: parsedData.data.aadharNo },
   });
 
-  if (existingAadhar) {
+  if (existingAadhar && existingAadhar.id !== parsedData.data.id) {
     return {
       success: false,
       message: "Candidate with this Aadhar number already exists",
@@ -43,11 +71,24 @@ export async function addCandidatePersonalAction(
   }
 
   try {
-    const createdCandidate = await prisma.candidate_Personal.create({
-      data: parsedData.data,
+    // Upsert: create if new, update if the candidate already exists (e.g. page refresh)
+    const savedCandidate = await prisma.candidate_Personal.upsert({
+      where: { id: parsedData.data.id },
+      create: parsedData.data,
+      update: {
+        name: parsedData.data.name,
+        email: parsedData.data.email,
+        phone: parsedData.data.phone,
+        fatherName: parsedData.data.fatherName,
+        aadharNo: parsedData.data.aadharNo,
+        profilePhoto: parsedData.data.profilePhoto,
+        aadharPhoto: parsedData.data.aadharPhoto,
+        gender: parsedData.data.gender,
+        dateOfBirth: parsedData.data.dateOfBirth,
+      },
     });
 
-    return { success: true, data: createdCandidate };
+    return { success: true, data: savedCandidate };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
@@ -89,14 +130,6 @@ export async function addCandidateEducationAction(
     return { success: false, message: "Candidate personal details not found" };
   }
 
-  const education = await prisma.candidate_Education.findFirst({
-    where: { candidateId: parsedData.data.id },
-  });
-
-  if (education) {
-    return { success: false, message: "Candidate education already exists" };
-  }
-
   const selectedCollege = await prisma.college.findUnique({
     where: { id: parsedData.data.collegeId },
     select: {
@@ -128,20 +161,38 @@ export async function addCandidateEducationAction(
   }
 
   try {
+    // Check if education already exists for this candidate
+    const existingEducation = await prisma.candidate_Education.findFirst({
+      where: { candidateId: parsedData.data.id },
+    });
+
+    const educationData = {
+      collegeId: selectedCollege.id,
+      collegeSessionId: selectedSession.id,
+      universityRoll: parsedData.data.universityRoll,
+      collegeRoll: parsedData.data.collegeRoll,
+      collegeFee: selectedSession.fees,
+      duration: selectedSession.duration,
+      course: parsedData.data.course,
+      domainOrMainSubject: parsedData.data.domainOrMainSubject,
+      mjcSubject: parsedData.data.mjcSubject,
+    };
+
+    if (existingEducation) {
+      // Update existing education record
+      const updatedEducation = await prisma.candidate_Education.update({
+        where: { id: existingEducation.id },
+        data: educationData,
+        select: { id: true, candidateId: true },
+      });
+      return { success: true, data: updatedEducation };
+    }
+
+    // Create new education record
     const createdEducation = await prisma.candidate_Education.create({
       data: {
         candidateId: parsedData.data.id,
-        collegeId: selectedCollege.id,
-        collegeSessionId: selectedSession.id,
-        universityRoll: parsedData.data.universityRoll,
-        collegeRoll: parsedData.data.collegeRoll,
-        // grade: parsedData.data.grade,
-        // marks: Number(parsedData.data.marks),
-        collegeFee: selectedSession.fees,
-        duration: selectedSession.duration,
-        course: parsedData.data.course,
-        domainOrMainSubject: parsedData.data.domainOrMainSubject,
-        mjcSubject: parsedData.data.mjcSubject,
+        ...educationData,
       },
       select: { id: true, candidateId: true },
     });

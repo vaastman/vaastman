@@ -11,6 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { LoadingSwap } from "@/components/ui/loading-swap";
+import type { Candidate_Education } from "@/lib/generated/prisma/client";
+
+export type EducationWithCollege = Candidate_Education & {
+  college: { universityId: string };
+};
 import {
   type AddCandidateEducationSchema,
   addCandidateEducationSchema,
@@ -21,22 +26,26 @@ import { SecondTwoRow } from "./second-2-row";
 
 export function AddCandidateEducationForm({
   candidateId,
+  existingData,
 }: {
   candidateId: string;
+  existingData: EducationWithCollege | null;
 }) {
+  const isEdit = Boolean(existingData);
+
   const form = useForm<AddCandidateEducationSchema>({
     resolver: zodResolver(addCandidateEducationSchema),
     defaultValues: {
       id: candidateId,
-      universityId: "",
-      universityRoll: "",
-      collegeRoll: "",
-      collegeId: "",
-      collegeSessionId: "",
-      duration: "",
-      course: "",
-      domainOrMainSubject: "",
-      mjcSubject: "",
+      universityId: existingData?.college.universityId ?? "",
+      universityRoll: existingData?.universityRoll ?? "",
+      collegeRoll: existingData?.collegeRoll ?? "",
+      collegeId: existingData?.collegeId ?? "",
+      collegeSessionId: existingData?.collegeSessionId ?? "",
+      duration: existingData?.duration ?? "",
+      course: existingData?.course ?? "",
+      domainOrMainSubject: existingData?.domainOrMainSubject ?? "",
+      mjcSubject: existingData?.mjcSubject ?? "",
     },
   });
 
@@ -61,7 +70,7 @@ export function AddCandidateEducationForm({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <FirstTwoRow form={form} />
             <SecondTwoRow form={form} />
           </div>
@@ -74,7 +83,7 @@ export function AddCandidateEducationForm({
             type="submit"
           >
             <LoadingSwap isLoading={isDisabled}>
-              Save Education Details
+              {isEdit ? "Update & Continue" : "Save Education Details"}
             </LoadingSwap>
           </Button>
         </CardFooter>

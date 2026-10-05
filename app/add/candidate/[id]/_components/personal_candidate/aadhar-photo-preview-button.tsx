@@ -31,12 +31,12 @@ export function AadharPhotoPreviewButton({
           <DialogTitle className="text-lg!">Aadhar Preview</DialogTitle>
         </DialogHeader>
         <div className="flex justify-center">
-          <div className="relative aspect-3/4 w-full max-w-xs overflow-hidden rounded-3xl border bg-muted">
+          <div className="relative aspect-4/3 sm:aspect-video w-full max-w-md overflow-hidden rounded-2xl border bg-muted/50">
             <Image
               alt="Candidate aadhar preview"
               fill
-              className="object-cover"
-              sizes="(max-width: 640px) 80vw, 320px"
+              className="object-contain p-1"
+              sizes="(max-width: 640px) 90vw, 450px"
               src={previewUrl}
               unoptimized
             />

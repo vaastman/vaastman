@@ -24,6 +24,9 @@ export function useAddCandidateEducation({
       queryClient.invalidateQueries({
         queryKey: ["candidate-education", candidateId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["candidate-progress", candidateId],
+      });
       toast.success("Education details saved.");
       router.push(`/add/candidate/${candidateId}/success`);
     },

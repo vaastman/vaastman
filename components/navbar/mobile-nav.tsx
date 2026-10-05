@@ -1,6 +1,5 @@
 import { IconMenu2 } from "@tabler/icons-react";
 import Link from "next/link";
-import { ModeToggle } from "@/components/mode-toggle";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +38,6 @@ function MobileNav({
       <div className="flex items-center justify-between">
         <NavbarLogoLink logo={logo} showTitle={false} />
         <div className="flex items-center gap-2">
-          <ModeToggle />
           {session ? (
             <ProfileDropdown
               compact

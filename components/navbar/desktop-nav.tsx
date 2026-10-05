@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -46,7 +45,6 @@ function DesktopNav({
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2">
-        <ModeToggle />
         {session ? (
           <ProfileDropdown
             session={session}
