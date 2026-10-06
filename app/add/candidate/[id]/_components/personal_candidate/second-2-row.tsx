@@ -110,7 +110,7 @@ export function SecondTwoRow({
       name="profilePhoto"
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid || undefined}>
-          <FieldLabel requiredLable>Profile</FieldLabel>
+          <FieldLabel requiredLable>Passport Size Photo</FieldLabel>
           <FieldContent>
             <InputGroup>
               <InputGroupAddon align="inline-start">
