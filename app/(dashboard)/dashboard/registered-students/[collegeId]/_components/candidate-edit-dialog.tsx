@@ -1,13 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  IconIdFilled,
-  IconLoader2,
-  IconPhotoFilled,
-} from "@tabler/icons-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -74,57 +70,49 @@ export function CandidateEditDialog({
   const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const [isUploadingAadhar, setIsUploadingAadhar] = useState(false);
 
+  const getCandidateFormValues = useCallback(
+    (c: RegisteredStudentRow): UpdateCandidateSchema => ({
+      candidateId: c.candidateId,
+      collegeId: c.collegeId,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      fatherName: c.fatherName,
+      aadharNo: c.aadharNo,
+      gender: (c.gender as "MALE" | "FEMALE" | "OTHER") || "MALE",
+      dateOfBirth: c.dateOfBirth,
+      profilePhoto: c.profilePhoto,
+      aadharPhoto: c.aadharPhoto ?? "",
+      universityRoll: c.universityRoll === "—" ? "" : c.universityRoll,
+      collegeRoll: c.collegeRoll === "—" ? "" : c.collegeRoll,
+      collegeSessionId:
+        c.collegeSessionId === "pending-education"
+          ? (sessions[0]?.id ?? "")
+          : c.collegeSessionId,
+      course: c.course === "—" ? "" : (c.course ?? ""),
+      mjcSubject: c.mjcSubject === "—" ? "" : c.mjcSubject,
+      domainOrMainSubject:
+        c.domainOrMainSubject === "—"
+          ? (domains[0]?.name ?? "")
+          : c.domainOrMainSubject,
+      duration: c.duration === "—" ? (sessions[0]?.duration ?? "") : c.duration,
+      collegeFee:
+        c.collegeFee === "—" ? (sessions[0]?.fees ?? "") : c.collegeFee,
+    }),
+    [sessions, domains],
+  );
+
   const form = useForm<UpdateCandidateSchema>({
     resolver: zodResolver(updateCandidateSchema),
-    defaultValues: {
-      candidateId: candidate.candidateId,
-      collegeId: candidate.collegeId,
-      name: candidate.name,
-      email: candidate.email,
-      phone: candidate.phone,
-      fatherName: candidate.fatherName,
-      aadharNo: candidate.aadharNo,
-      gender: (candidate.gender as "MALE" | "FEMALE" | "OTHER") || "MALE",
-      dateOfBirth: candidate.dateOfBirth,
-      profilePhoto: candidate.profilePhoto,
-      aadharPhoto: candidate.aadharPhoto ?? "",
-      universityRoll: candidate.universityRoll,
-      collegeRoll: candidate.collegeRoll,
-      collegeSessionId: candidate.collegeSessionId,
-      course: candidate.course ?? "",
-      mjcSubject: candidate.mjcSubject,
-      domainOrMainSubject: candidate.domainOrMainSubject,
-      duration: candidate.duration,
-      collegeFee: candidate.collegeFee,
-    },
+    defaultValues: getCandidateFormValues(candidate),
   });
 
   // Reset form when candidate changes or dialog opens
   useEffect(() => {
     if (open) {
-      form.reset({
-        candidateId: candidate.candidateId,
-        collegeId: candidate.collegeId,
-        name: candidate.name,
-        email: candidate.email,
-        phone: candidate.phone,
-        fatherName: candidate.fatherName,
-        aadharNo: candidate.aadharNo,
-        gender: (candidate.gender as "MALE" | "FEMALE" | "OTHER") || "MALE",
-        dateOfBirth: candidate.dateOfBirth,
-        profilePhoto: candidate.profilePhoto,
-        aadharPhoto: candidate.aadharPhoto ?? "",
-        universityRoll: candidate.universityRoll,
-        collegeRoll: candidate.collegeRoll,
-        collegeSessionId: candidate.collegeSessionId,
-        course: candidate.course ?? "",
-        mjcSubject: candidate.mjcSubject,
-        domainOrMainSubject: candidate.domainOrMainSubject,
-        duration: candidate.duration,
-        collegeFee: candidate.collegeFee,
-      });
+      form.reset(getCandidateFormValues(candidate));
     }
-  }, [open, candidate, form]);
+  }, [open, candidate, form, getCandidateFormValues]);
 
   const selectedCourse = form.watch("course");
   const mjcOptions = getMjcOptionsForCourse(selectedCourse || "");

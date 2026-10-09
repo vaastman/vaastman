@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { type UseFormReturn, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/card";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import type { Candidate_Education } from "@/lib/generated/prisma/client";
+import type { AddCandidateSchema } from "../../lib/zod-type/candidate";
 
 export type EducationWithCollege = Candidate_Education & {
   college: { universityId: string };
 };
+
 import {
   type AddCandidateEducationSchema,
   addCandidateEducationSchema,
@@ -71,8 +73,12 @@ export function AddCandidateEducationForm({
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
-            <FirstTwoRow form={form} />
-            <SecondTwoRow form={form} />
+            <FirstTwoRow
+              form={form as unknown as UseFormReturn<AddCandidateSchema>}
+            />
+            <SecondTwoRow
+              form={form as unknown as UseFormReturn<AddCandidateSchema>}
+            />
           </div>
         </CardContent>
         <CardFooter className="justify-center">

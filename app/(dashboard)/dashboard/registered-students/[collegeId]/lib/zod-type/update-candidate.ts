@@ -1,5 +1,5 @@
-import { Gender } from "@/lib/generated/prisma/enums";
 import { z } from "zod";
+import { Gender } from "@/lib/generated/prisma/enums";
 
 export const updateCandidateSchema = z.object({
   candidateId: z.string().min(1, "Candidate ID is required"),

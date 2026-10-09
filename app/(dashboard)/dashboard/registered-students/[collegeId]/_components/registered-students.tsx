@@ -1,9 +1,11 @@
 "use client";
 
-import { IconDownload } from "@tabler/icons-react";
-import Link from "next/link";
+import { IconAlertTriangleFilled, IconDownload } from "@tabler/icons-react";
 import { DataTable } from "@/app/(dashboard)/college/_components/data-table";
-import { downloadRegisteredStudentsSessionCsv } from "@/app/(dashboard)/dashboard/registered-students/[collegeId]/lib/export-session-csv";
+import {
+  downloadIncompleteCandidatesCsv,
+  downloadRegisteredStudentsSessionCsv,
+} from "@/app/(dashboard)/dashboard/registered-students/[collegeId]/lib/export-session-csv";
 import { useGetRegisteredStudents } from "@/app/(dashboard)/dashboard/registered-students/[collegeId]/query/use-get-registered-students";
 import { BackRedirect } from "@/components/back-redirect";
 import { ErrorDisplay } from "@/components/error-display";
@@ -80,12 +82,42 @@ export function RegisteredStudents({ collegeId }: RegisteredStudentsProps) {
           method="href"
         />
 
-        <div>
-          <h3 className="font-semibold">
-            {data.college.name}{" "}
-            {data.college.code ? `[${data.college.code}]` : ""}
-          </h3>
-          <p className="text-sm text-muted-foreground">Registered students</p>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-semibold">
+              {data.college.name}{" "}
+              {data.college.code ? `[${data.college.code}]` : ""}
+            </h3>
+            <p className="text-sm text-muted-foreground">Registered students</p>
+          </div>
+
+          {(() => {
+            const pendingSession = data.sessions.find(
+              (s) => s.id === "pending-education",
+            );
+            if (!pendingSession || !pendingSession.candidates.length)
+              return null;
+
+            return (
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-950/50"
+                onClick={() =>
+                  downloadIncompleteCandidatesCsv({
+                    collegeName: data.college.name,
+                    candidates: pendingSession.candidates,
+                  })
+                }
+              >
+                <IconAlertTriangleFilled
+                  className="size-5 text-amber-600 dark:text-amber-400"
+                  data-icon="inline-start"
+                />
+                Export Incomplete Leads ({pendingSession.candidates.length})
+              </Button>
+            );
+          })()}
         </div>
 
         <Tabs defaultValue={data.sessions[0].id} className="gap-4">
@@ -100,20 +132,37 @@ export function RegisteredStudents({ collegeId }: RegisteredStudentsProps) {
           {data.sessions.map((session) => (
             <TabsContent key={session.id} value={session.id} className="mt-0">
               <div className="mb-3 flex justify-end">
-                <Button
-                  type="button"
-                  onClick={() =>
-                    downloadRegisteredStudentsSessionCsv({
-                      collegeName: data.college.name,
-                      sessionName: session.name,
-                      candidates: session.candidates,
-                    })
-                  }
-                  disabled={!session.candidates.length}
-                >
-                  <IconDownload className="size-5" data-icon="inline-start" />
-                  Export CSV
-                </Button>
+                {session.id === "pending-education" ? (
+                  <Button
+                    type="button"
+                    className="gap-2 border-amber-500/30 bg-amber-600 text-white hover:bg-amber-700"
+                    onClick={() =>
+                      downloadIncompleteCandidatesCsv({
+                        collegeName: data.college.name,
+                        candidates: session.candidates,
+                      })
+                    }
+                    disabled={!session.candidates.length}
+                  >
+                    <IconDownload className="size-5" data-icon="inline-start" />
+                    Export Incomplete Leads CSV
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      downloadRegisteredStudentsSessionCsv({
+                        collegeName: data.college.name,
+                        sessionName: session.name,
+                        candidates: session.candidates,
+                      })
+                    }
+                    disabled={!session.candidates.length}
+                  >
+                    <IconDownload className="size-5" data-icon="inline-start" />
+                    Export CSV
+                  </Button>
+                )}
               </div>
               <DataTable columns={columns} data={session.candidates} />
             </TabsContent>

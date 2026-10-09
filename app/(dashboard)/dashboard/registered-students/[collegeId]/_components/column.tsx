@@ -5,6 +5,7 @@ import type { useGetRegisteredStudents } from "@/app/(dashboard)/dashboard/regis
 import { CandidateActions } from "./candidate-actions";
 import { CandidateCell } from "./candidate-cell";
 import { PaymentStatusBadge } from "./payment-status-badge";
+import { RegistrationStatusBadge } from "./registration-status-badge";
 
 export type RegisteredStudentsRow = NonNullable<
   ReturnType<typeof useGetRegisteredStudents>["data"]
@@ -21,6 +22,13 @@ export const columns: ColumnDef<RegisteredStudentsRow>[] = [
         universityRoll={row.original.universityRoll}
         collegeRoll={row.original.collegeRoll}
       />
+    ),
+  },
+  {
+    accessorKey: "registrationStatus",
+    header: "Status",
+    cell: ({ row }) => (
+      <RegistrationStatusBadge status={row.original.registrationStatus} />
     ),
   },
   {

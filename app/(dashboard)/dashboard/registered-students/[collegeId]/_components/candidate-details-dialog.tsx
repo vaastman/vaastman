@@ -1,16 +1,10 @@
 "use client";
 
 import {
-  IconCalendarFilled,
-  IconCheck,
   IconCreditCardFilled,
-  IconDownload,
-  IconExternalLink,
   IconEyeFilled,
   IconIdFilled,
-  IconMailFilled,
   IconPencil,
-  IconPhoneFilled,
   IconSchoolFilled,
   IconTrashFilled,
   IconUserFilled,
@@ -28,10 +22,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { RegisteredStudentRow } from "../lib/actions";
 import { PaymentStatusBadge } from "./payment-status-badge";
+import { RegistrationStatusBadge } from "./registration-status-badge";
 
 type CandidateDetailsDialogProps = {
   candidate: RegisteredStudentRow;
@@ -97,6 +91,9 @@ export function CandidateDetailsDialog({
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <RegistrationStatusBadge
+                  status={candidate.registrationStatus}
+                />
                 <Badge
                   variant="outline"
                   className="px-3 py-1 font-semibold text-xs"
@@ -282,7 +279,7 @@ export function CandidateDetailsDialog({
                         className="w-full gap-1.5"
                         onClick={() =>
                           setPhotoPreview({
-                            url: candidate.aadharPhoto!,
+                            url: candidate.aadharPhoto ?? "",
                             title: `${candidate.name} - Aadhar Document`,
                           })
                         }
@@ -298,97 +295,111 @@ export function CandidateDetailsDialog({
 
             {/* ACADEMIC TAB */}
             <TabsContent value="academic" className="space-y-6 pt-4">
-              <div className="grid gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    College Name
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.collegeName}
+              {candidate.registrationStatus === "INCOMPLETE" ? (
+                <div className="rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-8 text-center space-y-2">
+                  <IconSchoolFilled className="mx-auto size-10 text-amber-500/80 mb-2" />
+                  <h4 className="font-semibold text-foreground text-base">
+                    Educational Details Pending
+                  </h4>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    This candidate only completed the personal details step.
+                    Academic information (college, session, course, rolls) has
+                    not been submitted yet.
                   </p>
                 </div>
+              ) : (
+                <div className="grid gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      College Name
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.collegeName}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Affiliated University
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.universityName || "—"}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Affiliated University
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.universityName || "—"}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Academic Session
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.sessionName}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Academic Session
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.sessionName}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Course Duration
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.duration}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Course Duration
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.duration}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    University Roll Number
-                  </p>
-                  <p className="text-base font-mono font-semibold text-foreground">
-                    {candidate.universityRoll}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      University Roll Number
+                    </p>
+                    <p className="text-base font-mono font-semibold text-foreground">
+                      {candidate.universityRoll}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    College Roll Number
-                  </p>
-                  <p className="text-base font-mono font-semibold text-foreground">
-                    {candidate.collegeRoll}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      College Roll Number
+                    </p>
+                    <p className="text-base font-mono font-semibold text-foreground">
+                      {candidate.collegeRoll}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Enrolled Course
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.course || "—"}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Enrolled Course
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.course || "—"}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Major / MJC Subject
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.mjcSubject || "—"}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Major / MJC Subject
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.mjcSubject || "—"}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Domain / Main Subject
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {candidate.domainOrMainSubject || "—"}
-                  </p>
-                </div>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Domain / Main Subject
+                    </p>
+                    <p className="text-base font-semibold text-foreground">
+                      {candidate.domainOrMainSubject || "—"}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    College Registration Fee
-                  </p>
-                  <p className="text-lg font-bold text-primary">
-                    ₹{candidate.collegeFee}
-                  </p>
+                  <div className="rounded-xl border bg-muted/20 p-4 space-y-1 sm:col-span-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      College Registration Fee
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      ₹{candidate.collegeFee}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
 
             {/* PAYMENTS TAB */}

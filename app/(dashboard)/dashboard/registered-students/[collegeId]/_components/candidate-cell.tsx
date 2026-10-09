@@ -41,38 +41,52 @@ export function CandidateCell({
 
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{name}</p>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span className="truncate">#{universityRoll}</span>
-          <TooltipProvider disableHoverableContent>
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center"
-                  aria-label="University roll number info"
-                >
-                  <IconInfoCircleFilled className="size-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top">University roll number</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <span className="truncate ml-2">#{collegeRoll}</span>
-          <TooltipProvider disableHoverableContent>
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center"
-                  aria-label="College roll number info"
-                >
-                  <IconInfoCircleFilled className="size-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top">College roll number</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        {universityRoll && universityRoll !== "—" ? (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="truncate">#{universityRoll}</span>
+            <TooltipProvider disableHoverableContent>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center"
+                    aria-label="University roll number info"
+                  >
+                    <IconInfoCircleFilled className="size-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  University roll number
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            {collegeRoll && collegeRoll !== "—" && (
+              <>
+                <span className="truncate ml-2">#{collegeRoll}</span>
+                <TooltipProvider disableHoverableContent>
+                  <Tooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center"
+                        aria-label="College roll number info"
+                      >
+                        <IconInfoCircleFilled className="size-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      College roll number
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            No roll numbers
+          </p>
+        )}
       </div>
     </div>
   );

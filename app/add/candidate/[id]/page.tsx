@@ -1,24 +1,18 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ErrorDisplay } from "@/components/error-display";
 import { LoaderScreen } from "@/components/loader-screen";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  AddCandidateEducationForm,
+  CandidateForm,
   type EducationWithCollege,
-} from "./_components/education_candidate/main";
-import { AddCandidatePersonalForm } from "./_components/personal_candidate/main";
+} from "./_components/candidate-form";
 import { useGetCandidateProgress } from "./query/use-get-candidate-progress";
 import { useGetUniversityOptions } from "./query/use-get-college-options";
-
-// Valid tab values
-const VALID_TABS = ["personal", "education"] as const;
-type ValidTab = (typeof VALID_TABS)[number];
 
 // Simple CUID2 validation (checks basic format)
 export function isValidCuid(id: string): boolean {
@@ -29,7 +23,6 @@ export function isValidCuid(id: string): boolean {
 export default function Page() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
 
   // get college data
   const {
@@ -46,29 +39,15 @@ export default function Page() {
     error: progressError,
   } = useGetCandidateProgress({ candidateId });
 
-  const tabParam = searchParams.get("tab");
-
-  // Validate tab - fallback to "personal" if invalid
-  const currentTab: ValidTab =
-    tabParam && VALID_TABS.includes(tabParam as ValidTab)
-      ? (tabParam as ValidTab)
-      : "personal";
-
   // Validate candidateId and redirect if invalid
   useEffect(() => {
     if (!candidateId || !isValidCuid(candidateId)) {
       // Redirect to parent /add route which will generate a new valid CUID
       router.replace("/add/candidate");
-      return;
     }
+  }, [candidateId, router.replace]);
 
-    if (tabParam !== currentTab) {
-      // If tab was invalid, update URL to show correct tab
-      router.replace(`/add/candidate/${candidateId}?tab=${currentTab}`);
-    }
-  }, [candidateId, tabParam, currentTab, router.replace]);
-
-  // Auto-advance to the correct tab based on existing progress
+  // If already completed both, redirect to success page
   useEffect(() => {
     if (!progress || !candidateId) return;
 
@@ -76,16 +55,9 @@ export default function Page() {
     const hasEducation = Boolean(progress.education);
 
     if (hasPersonal && hasEducation) {
-      // Both steps done — redirect to success page
       router.replace(`/add/candidate/${candidateId}/success`);
-      return;
     }
-
-    if (hasPersonal && currentTab === "personal") {
-      // Personal already saved — jump to education tab
-      router.replace(`/add/candidate/${candidateId}?tab=education`);
-    }
-  }, [progress, candidateId, currentTab, router.replace]);
+  }, [progress, candidateId, router.replace]);
 
   if (isUniversityOptionsPending || isProgressPending) {
     return <LoaderScreen message="Loading..." />;
@@ -108,7 +80,7 @@ export default function Page() {
           className="w-fit self-start gap-2 px-0 text-muted-foreground hover:bg-transparent hover:text-foreground sm:self-auto"
         >
           <Link href="/home">
-            <ArrowLeft className="size-4" />
+            <IconArrowLeft className="size-5" data-icon="inline-start" />
             Back
           </Link>
         </Button>
@@ -118,30 +90,13 @@ export default function Page() {
         <div className="hidden h-10 w-[85px] sm:block" aria-hidden="true" />
       </div>
 
-      <Tabs value={currentTab} className="gap-4">
-        <TabsList className="sr-only">
-          <TabsTrigger disabled={currentTab !== "personal"} value="personal">
-            Personal
-          </TabsTrigger>
-          <TabsTrigger disabled={currentTab !== "education"} value="education">
-            Education
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="personal" className="mt-0">
-          <AddCandidatePersonalForm
-            candidateId={candidateId}
-            existingData={progress?.personal ?? null}
-          />
-        </TabsContent>
-        <TabsContent value="education" className="mt-0">
-          <AddCandidateEducationForm
-            candidateId={candidateId}
-            existingData={
-              (progress?.education as EducationWithCollege | undefined) ?? null
-            }
-          />
-        </TabsContent>
-      </Tabs>
+      <CandidateForm
+        candidateId={candidateId}
+        existingPersonal={progress?.personal ?? null}
+        existingEducation={
+          (progress?.education as EducationWithCollege | undefined) ?? null
+        }
+      />
     </div>
   );
 }

@@ -18,7 +18,7 @@ export type RegisteredStudentPayment = {
 
 export type RegisteredStudentRow = {
   candidateId: string;
-  educationId: string;
+  educationId: string | null;
   name: string;
   profilePhoto: string;
   aadharPhoto?: string | null;
@@ -36,6 +36,7 @@ export type RegisteredStudentRow = {
   duration: string;
   collegeFee: string;
   paymentStatus: string;
+  registrationStatus: "COMPLETE" | "INCOMPLETE";
   collegeId: string;
   collegeName: string;
   universityName: string;
@@ -205,6 +206,7 @@ export async function getRegisteredStudentsByCollege(collegeId: string) {
         collegeSessionId: candidate.collegeSession.id,
         sessionName: candidate.collegeSession.name,
         paymentStatus: finalPaymentStatus,
+        registrationStatus: "COMPLETE",
         payments: candidate.candidate.candidatePayments.map((p) => ({
           id: p.id,
           amount: p.amount,
@@ -222,6 +224,69 @@ export async function getRegisteredStudentsByCollege(collegeId: string) {
       candidatesBySessionId.set(sessionId, sessionCandidates);
     }
 
+    // Query candidates who filled personal details but do not have educational details yet
+    const pendingCandidates = await prisma.candidate_Personal.findMany({
+      where: {
+        candidateEducations: { none: {} },
+      },
+      include: {
+        candidatePayments: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            razorpayPaymentId: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    const pendingCandidatesRows: RegisteredStudentRow[] = pendingCandidates.map(
+      (candidate) => ({
+        candidateId: candidate.id,
+        educationId: null,
+        name: candidate.name,
+        profilePhoto: candidate.profilePhoto,
+        aadharPhoto: candidate.aadharPhoto,
+        aadharNo: candidate.aadharNo,
+        email: candidate.email,
+        phone: candidate.phone,
+        fatherName: candidate.fatherName,
+        gender: candidate.gender,
+        dateOfBirth: candidate.dateOfBirth,
+        universityRoll: "—",
+        collegeRoll: "—",
+        course: "—",
+        domainOrMainSubject: "—",
+        mjcSubject: "—",
+        duration: "—",
+        collegeFee: "—",
+        collegeId: college.id,
+        collegeName: college.name,
+        universityName: college.university?.name
+          ? college.university.name.replace(/_/g, " ")
+          : "",
+        collegeSessionId: "pending-education",
+        sessionName: "Pending Education",
+        paymentStatus: "N/A",
+        registrationStatus: "INCOMPLETE",
+        payments: candidate.candidatePayments.map((p) => ({
+          id: p.id,
+          amount: p.amount,
+          status: p.status,
+          razorpayPaymentId: p.razorpayPaymentId,
+          createdAt: p.createdAt.toISOString(),
+        })),
+      }),
+    );
+
     const configuredIds = college.sessions.map((s) => s.id);
     const extraIds = Array.from(candidatesBySessionId.keys())
       .filter((id) => !configuredIds.includes(id))
@@ -232,6 +297,20 @@ export async function getRegisteredStudentsByCollege(collegeId: string) {
     const sessionNameById = new Map(
       college.sessions.map((s) => [s.id, s.name]),
     );
+
+    const allSessions = sessionIds.map((id) => ({
+      id,
+      name: sessionNameById.get(id) ?? id,
+      candidates: candidatesBySessionId.get(id) ?? [],
+    }));
+
+    if (pendingCandidatesRows.length > 0) {
+      allSessions.push({
+        id: "pending-education",
+        name: "Pending Education",
+        candidates: pendingCandidatesRows,
+      });
+    }
 
     return {
       success: true,
@@ -246,11 +325,7 @@ export async function getRegisteredStudentsByCollege(collegeId: string) {
           domains: college.domains,
           sessions: college.sessions,
         },
-        sessions: sessionIds.map((id) => ({
-          id,
-          name: sessionNameById.get(id) ?? id,
-          candidates: candidatesBySessionId.get(id) ?? [],
-        })),
+        sessions: allSessions,
       },
     };
   } catch (error) {
@@ -307,20 +382,42 @@ export async function updateCandidateAction(data: UpdateCandidateSchema) {
         },
       });
 
-      // 2. Update educational details
-      await tx.candidate_Education.updateMany({
+      // 2. Update or create educational details
+      const existingEdu = await tx.candidate_Education.findFirst({
         where: { candidateId: val.candidateId },
-        data: {
-          universityRoll: val.universityRoll,
-          collegeRoll: val.collegeRoll,
-          course: val.course ?? null,
-          mjcSubject: val.mjcSubject,
-          domainOrMainSubject: val.domainOrMainSubject,
-          collegeSessionId: val.collegeSessionId,
-          duration: val.duration,
-          collegeFee: val.collegeFee,
-        },
       });
+
+      if (existingEdu) {
+        await tx.candidate_Education.update({
+          where: { id: existingEdu.id },
+          data: {
+            collegeId: val.collegeId,
+            universityRoll: val.universityRoll,
+            collegeRoll: val.collegeRoll,
+            course: val.course ?? null,
+            mjcSubject: val.mjcSubject,
+            domainOrMainSubject: val.domainOrMainSubject,
+            collegeSessionId: val.collegeSessionId,
+            duration: val.duration,
+            collegeFee: val.collegeFee,
+          },
+        });
+      } else {
+        await tx.candidate_Education.create({
+          data: {
+            candidateId: val.candidateId,
+            collegeId: val.collegeId,
+            universityRoll: val.universityRoll,
+            collegeRoll: val.collegeRoll,
+            course: val.course ?? null,
+            mjcSubject: val.mjcSubject,
+            domainOrMainSubject: val.domainOrMainSubject,
+            collegeSessionId: val.collegeSessionId,
+            duration: val.duration,
+            collegeFee: val.collegeFee,
+          },
+        });
+      }
     });
 
     return { success: true, message: "Candidate updated successfully" };

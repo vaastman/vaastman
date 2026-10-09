@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Controller, type UseFormReturn, useWatch } from "react-hook-form";
-import type { AddCandidateEducationSchema } from "@/app/add/candidate/[id]/lib/zod-type/candidate-education";
+import type { AddCandidateSchema } from "@/app/add/candidate/[id]/lib/zod-type/candidate";
 import { useGetUniversityOptions } from "@/app/add/candidate/[id]/query/use-get-college-options";
 import {
   Field,
@@ -17,7 +17,7 @@ import {
 export function SecondTwoRow({
   form,
 }: {
-  form: UseFormReturn<AddCandidateEducationSchema>;
+  form: UseFormReturn<AddCandidateSchema>;
 }) {
   const { data: universityOptions = [] } = useGetUniversityOptions();
   const selectedUniversityId = useWatch({

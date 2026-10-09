@@ -11,13 +11,13 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import type { AddCandidateEducationSchema } from "../../lib/zod-type/candidate-education";
+import type { AddCandidateSchema } from "../../lib/zod-type/candidate";
 import { COURSE_OPTIONS, getMjcOptionsForCourse } from "./course-mjc-helpers";
 
 export function FirstTwoRow({
   form,
 }: {
-  form: UseFormReturn<AddCandidateEducationSchema>;
+  form: UseFormReturn<AddCandidateSchema>;
 }) {
   const selectedCourse = useWatch({
     control: form.control,

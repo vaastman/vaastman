@@ -16,7 +16,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import type { AddCandidatePersonalSchema } from "../../lib/zod-type/candidate-personal";
+import type { AddCandidateSchema } from "../../lib/zod-type/candidate";
 import { AadharPhotoPreviewButton } from "./aadhar-photo-preview-button";
 import {
   ACCEPTED_IMAGE_TYPES,
@@ -29,7 +29,7 @@ import {
 export function AadharUploadRow({
   form,
 }: {
-  form: UseFormReturn<AddCandidatePersonalSchema>;
+  form: UseFormReturn<AddCandidateSchema>;
 }) {
   const [previewUrl, setPreviewUrl] = useState(form.getValues("aadharPhoto"));
   const [isUploading, setIsUploading] = useState(false);

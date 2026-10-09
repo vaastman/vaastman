@@ -11,7 +11,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import type { AddCandidatePersonalSchema } from "../../lib/zod-type/candidate-personal";
+import type { AddCandidateSchema } from "../../lib/zod-type/candidate";
 
 const genderOptions = [
   { label: "Male", value: "MALE" },
@@ -22,7 +22,7 @@ const genderOptions = [
 export function FirstTwoRow({
   form,
 }: {
-  form: UseFormReturn<AddCandidatePersonalSchema>;
+  form: UseFormReturn<AddCandidateSchema>;
 }) {
   return (
     <>
