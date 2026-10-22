@@ -15,7 +15,12 @@ export const publicAddCandidateSchema = z.object({
   name: z.string().trim().toUpperCase().optional(),
 
   /** Email address. Stored in UPPERCASE. */
-  email: z.string().trim().email({ error: "Valid email is required" }).toUpperCase().optional(),
+  email: z
+    .string()
+    .trim()
+    .email({ error: "Valid email is required" })
+    .toUpperCase()
+    .optional(),
 
   /** Phone number (digits as string). */
   phone: z.string().trim().toUpperCase().optional(),
@@ -41,7 +46,9 @@ export const publicAddCandidateSchema = z.object({
   aadharPhoto: z.string().trim().optional(),
 
   /** Gender: "MALE" | "FEMALE" | "OTHER" */
-  gender: z.enum(Gender, { error: "Gender must be MALE, FEMALE, or OTHER" }).optional(),
+  gender: z
+    .enum(Gender, { error: "Gender must be MALE, FEMALE, or OTHER" })
+    .optional(),
 
   /** Date of birth as a string (e.g. "2000-01-15" or "15/01/2000"). */
   dateOfBirth: z.string().trim().optional(),

@@ -16,6 +16,10 @@ model Candidate_Personal {
   // Add more values as new intake sources are introduced.
   registrationSource String?
 
+  // Tracks whether the offer letter has been dispatched to the candidate via email
+  isOfferLetterSent Boolean   @default(false)
+  offerLetterSentAt DateTime?
+
   termsAcceptedAt   DateTime?
   privacyAcceptedAt DateTime?
 

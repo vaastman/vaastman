@@ -31,7 +31,8 @@ export function OfferLetterPreview({ data }: OfferLetterPreviewProps) {
         if (images) {
           await Promise.all(
             Array.from(images).map((img) => {
-              if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+              if (img.complete && img.naturalWidth > 0)
+                return Promise.resolve();
               return new Promise<void>((resolve) => {
                 img.onload = () => resolve();
                 img.onerror = () => resolve();

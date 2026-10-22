@@ -1,0 +1,48 @@
+export college and it's linked college session
+
+\copy (
+    SELECT
+        c.id AS college_id,
+        c.name AS college_name,
+        c.code AS college_code,
+        c."universityId" AS university_id,
+        c."createdAt" AS college_created_at,
+        cs.id AS session_id,
+        cs.name AS session_name,
+        cs.fees AS session_fees,
+        cs.duration AS session_duration,
+        cs.status AS session_status,
+        cs."isActive" AS session_is_active,
+        cs.deprecated AS session_deprecated,
+        cs."createdAt" AS session_created_at
+    FROM "College" c
+    LEFT JOIN "CollegeSession" cs
+        ON c.id = cs."collegeId"
+    ORDER BY c.name, cs.name
+) TO '/tmp/college_sessions.csv' WITH (FORMAT CSV, HEADER TRUE);
+
+--------------------------------------------------------------------------------
+DISPATCH OFFER LETTERS SCRIPT
+--------------------------------------------------------------------------------
+
+Description:
+  Dispatches official Internship Offer Letters (PDF attachments) via Resend
+  to students who registered via the Google Form / Public API.
+
+Target Students:
+  - registrationSource = 'api-gForm'
+  - isOfferLetterSent = false
+  - valid email address and associated college / education record
+
+Commands to run:
+  bun run scripts/send-offer-letters.ts
+  # OR via package.json shortcut:
+  bun run send-offer-letters
+
+What it does:
+  1. Finds eligible candidates from Neon PostgreSQL database.
+  2. Generates an A4 PDF offer letter with student details, letterhead,
+     signatures, stamp, and WhatsApp QR code.
+  3. Sends an email from 'Vaastman <noreply@id0.uk>' with the PDF attached.
+  4. On successful delivery, marks 'isOfferLetterSent = true' and
+     'offerLetterSentAt = NOW()' so duplicate emails are never sent.

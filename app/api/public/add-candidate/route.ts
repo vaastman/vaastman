@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
-import { type PublicAddCandidateSchema, publicAddCandidateSchema } from "./schema";
+import {
+  type PublicAddCandidateSchema,
+  publicAddCandidateSchema,
+} from "./schema";
 
 /**
  * POST /api/public/add-candidate
@@ -81,7 +84,10 @@ export async function POST(request: Request) {
 
     if (selectedCollege.sessions.length === 0) {
       return Response.json(
-        { success: false, message: "Selected session was not found or is inactive" },
+        {
+          success: false,
+          message: "Selected session was not found or is inactive",
+        },
         { status: 400 },
       );
     }
@@ -145,7 +151,10 @@ export async function POST(request: Request) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         return Response.json(
-          { success: false, message: "A candidate with this Aadhar number already exists" },
+          {
+            success: false,
+            message: "A candidate with this Aadhar number already exists",
+          },
           { status: 409 },
         );
       }
@@ -163,7 +172,10 @@ export async function POST(request: Request) {
     }
 
     return Response.json(
-      { success: false, message: "Something went wrong while saving candidate details" },
+      {
+        success: false,
+        message: "Something went wrong while saving candidate details",
+      },
       { status: 500 },
     );
   }
