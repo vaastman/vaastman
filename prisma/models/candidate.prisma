@@ -10,6 +10,12 @@ model Candidate_Personal {
   gender       Gender
   dateOfBirth  String
 
+  // Tracks the source/origin of this candidate's registration.
+  // NULL  → registered through the admin dashboard UI (default).
+  // "api-gForm" → registered via the public API (e.g. Google Form webhook).
+  // Add more values as new intake sources are introduced.
+  registrationSource String?
+
   termsAcceptedAt   DateTime?
   privacyAcceptedAt DateTime?
 
