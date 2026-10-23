@@ -2,17 +2,30 @@ import { prisma } from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
 import {
   type PublicAddCandidateSchema,
-  publicAddCandidateSchema,
+  publicAddCandidatesInputSchema,
 } from "./schema";
+
+type CandidateResult = {
+  aadharNo: string;
+  status: "CREATED" | "DUPLICATE" | "FAILED";
+  candidateId?: string;
+  educationId?: string | null;
+  message?: string;
+};
 
 /**
  * POST /api/public/add-candidate
  *
- * Public endpoint (no auth) for adding a candidate from external sources
- * like Google Forms. All fields are optional except `aadharNo`.
+ * Public endpoint (no auth) for adding candidates from external sources
+ * like Google Forms or bulk webhook batches.
  *
- * Sets `registrationSource` to "api-gForm" so we can track where the
- * student came from.
+ * Accepts either:
+ * - A single candidate object: `{ aadharNo: "...", name: "..." }`
+ * - An array of candidate objects: `[ { aadharNo: "..." }, { aadharNo: "..." } ]`
+ * - An object with a candidates array: `{ "candidates": [ ... ] }`
+ *
+ * All fields are optional except `aadharNo`.
+ * Sets `registrationSource` to "api-gForm" and `isOfferLetterSent` to false.
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -25,7 +38,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = publicAddCandidateSchema.safeParse(body);
+  const parsed = publicAddCandidatesInputSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
       {
@@ -40,112 +53,184 @@ export async function POST(request: Request) {
     );
   }
 
-  const data: PublicAddCandidateSchema = parsed.data;
+  const isSingle =
+    !Array.isArray(body) &&
+    !(body && typeof body === "object" && "candidates" in body);
 
-  // ── Check for duplicate Aadhar ──────────────────────────────────────
-  const existingCandidate = await prisma.candidate_Personal.findUnique({
-    where: { aadharNo: data.aadharNo },
-  });
+  let candidateList: PublicAddCandidateSchema[];
+  if (Array.isArray(parsed.data)) {
+    candidateList = parsed.data;
+  } else if ("candidates" in parsed.data) {
+    candidateList = parsed.data.candidates;
+  } else {
+    candidateList = [parsed.data];
+  }
 
-  if (existingCandidate) {
+  if (candidateList.length === 0) {
     return Response.json(
-      {
-        success: false,
-        message: "A candidate with this Aadhar number already exists",
-      },
-      { status: 409 },
+      { success: false, message: "No candidate records provided" },
+      { status: 400 },
     );
   }
 
-  // ── Validate college + session if education fields are provided ──────
-  let selectedCollege: {
-    id: string;
-    sessions: { id: string; fees: string; duration: string }[];
-  } | null = null;
+  // ── 1. Batch check for existing Aadhar numbers in DB ────────────────
+  const aadharNumbers = candidateList.map((c) => c.aadharNo);
+  const existingRecords = await prisma.candidate_Personal.findMany({
+    where: { aadharNo: { in: aadharNumbers } },
+    select: { aadharNo: true },
+  });
+  const existingAadharSet = new Set(existingRecords.map((r) => r.aadharNo));
 
-  if (data.collegeId && data.collegeSessionId) {
-    selectedCollege = await prisma.college.findUnique({
-      where: { id: data.collegeId },
-      select: {
-        id: true,
-        sessions: {
-          where: { id: data.collegeSessionId, status: "ACTIVE" },
-          select: { id: true, fees: true, duration: true },
-        },
-      },
-    });
+  // ── 2. Pre-fetch unique colleges & active sessions in one query ─────
+  const collegeIds = [
+    ...new Set(
+      candidateList
+        .map((c) => c.collegeId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
 
-    if (!selectedCollege) {
-      return Response.json(
-        { success: false, message: "Selected college was not found" },
-        { status: 400 },
-      );
-    }
-
-    if (selectedCollege.sessions.length === 0) {
-      return Response.json(
-        {
-          success: false,
-          message: "Selected session was not found or is inactive",
-        },
-        { status: 400 },
-      );
-    }
-  }
-
-  // ── Persist candidate ───────────────────────────────────────────────
-  try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Create personal details
-      const personal = await tx.candidate_Personal.create({
-        data: {
-          name: data.name ?? "",
-          email: data.email ?? "",
-          phone: data.phone ?? "",
-          fatherName: data.fatherName ?? "",
-          aadharNo: data.aadharNo,
-          profilePhoto: data.profilePhoto ?? "",
-          aadharPhoto: data.aadharPhoto ?? "",
-          gender: data.gender ?? "MALE",
-          dateOfBirth: data.dateOfBirth ?? "",
-          registrationSource: "api-gForm",
-        },
-      });
-
-      // 2. Create education only if college + session were provided & valid
-      let education: { id: string; candidateId: string } | null = null;
-      const session = selectedCollege?.sessions[0];
-
-      if (selectedCollege && session) {
-        education = await tx.candidate_Education.create({
-          data: {
-            candidateId: personal.id,
-            collegeId: selectedCollege.id,
-            collegeSessionId: session.id,
-            universityRoll: data.universityRoll ?? "",
-            collegeRoll: data.collegeRoll ?? "",
-            collegeFee: session.fees,
-            duration: session.duration,
-            course: data.course ?? "",
-            domainOrMainSubject: data.domainOrMainSubject ?? "",
-            mjcSubject: data.mjcSubject ?? "",
+  const colleges =
+    collegeIds.length > 0
+      ? await prisma.college.findMany({
+          where: { id: { in: collegeIds } },
+          select: {
+            id: true,
+            sessions: {
+              where: { status: "ACTIVE" },
+              select: { id: true, fees: true, duration: true },
+            },
           },
-          select: { id: true, candidateId: true },
+        })
+      : [];
+
+  const collegeMap = new Map(colleges.map((c) => [c.id, c]));
+
+  // ── 3. Persist candidates inside a transaction ──────────────────────
+  try {
+    const seenInBatch = new Set<string>();
+
+    const results: CandidateResult[] = await prisma.$transaction(async (tx) => {
+      const batchResults: CandidateResult[] = [];
+
+      for (const data of candidateList) {
+        // Check for duplicate Aadhar (either in DB or earlier in the same batch)
+        if (
+          existingAadharSet.has(data.aadharNo) ||
+          seenInBatch.has(data.aadharNo)
+        ) {
+          batchResults.push({
+            aadharNo: data.aadharNo,
+            status: "DUPLICATE",
+            message: "A candidate with this Aadhar number already exists",
+          });
+          continue;
+        }
+
+        seenInBatch.add(data.aadharNo);
+
+        // 1. Create personal details
+        const personal = await tx.candidate_Personal.create({
+          data: {
+            name: data.name ?? "",
+            email: data.email ?? "",
+            phone: data.phone ?? "",
+            fatherName: data.fatherName ?? "",
+            aadharNo: data.aadharNo,
+            profilePhoto: data.profilePhoto ?? "",
+            aadharPhoto: data.aadharPhoto ?? "",
+            gender: data.gender ?? "MALE",
+            dateOfBirth: data.dateOfBirth ?? "",
+            registrationSource: "api-gForm",
+            isOfferLetterSent: false,
+          },
+        });
+
+        // 2. Create education record if college + session are valid
+        let educationId: string | null = null;
+        if (data.collegeId && data.collegeSessionId) {
+          const college = collegeMap.get(data.collegeId);
+          const session = college?.sessions.find(
+            (s) => s.id === data.collegeSessionId,
+          );
+
+          if (college && session) {
+            const education = await tx.candidate_Education.create({
+              data: {
+                candidateId: personal.id,
+                collegeId: college.id,
+                collegeSessionId: session.id,
+                universityRoll: data.universityRoll ?? "",
+                collegeRoll: data.collegeRoll ?? "",
+                collegeFee: session.fees,
+                duration: session.duration,
+                course: data.course ?? "",
+                domainOrMainSubject: data.domainOrMainSubject ?? "",
+                mjcSubject: data.mjcSubject ?? "",
+              },
+              select: { id: true },
+            });
+            educationId = education.id;
+          }
+        }
+
+        batchResults.push({
+          aadharNo: data.aadharNo,
+          status: "CREATED",
+          candidateId: personal.id,
+          educationId,
         });
       }
 
-      return { personal, education };
+      return batchResults;
     });
+
+    // ── Single candidate response format (backwards compatible) ───────
+    if (isSingle) {
+      const single = results[0];
+      if (single.status === "CREATED") {
+        return Response.json(
+          {
+            success: true,
+            data: {
+              candidateId: single.candidateId,
+              educationId: single.educationId,
+            },
+          },
+          { status: 201 },
+        );
+      }
+
+      if (single.status === "DUPLICATE") {
+        return Response.json(
+          {
+            success: false,
+            message: "A candidate with this Aadhar number already exists",
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    // ── Bulk candidates response format ───────────────────────────────
+    const createdCount = results.filter((r) => r.status === "CREATED").length;
+    const duplicateCount = results.filter(
+      (r) => r.status === "DUPLICATE",
+    ).length;
+    const failedCount = results.filter((r) => r.status === "FAILED").length;
 
     return Response.json(
       {
         success: true,
-        data: {
-          candidateId: result.personal.id,
-          educationId: result.education?.id ?? null,
+        summary: {
+          total: candidateList.length,
+          created: createdCount,
+          duplicates: duplicateCount,
+          failed: failedCount,
         },
+        data: results,
       },
-      { status: 201 },
+      { status: createdCount > 0 ? 201 : 200 },
     );
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

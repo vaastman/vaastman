@@ -80,3 +80,25 @@ export const publicAddCandidateSchema = z.object({
 });
 
 export type PublicAddCandidateSchema = z.infer<typeof publicAddCandidateSchema>;
+
+/**
+ * Flexible input schema supporting:
+ * 1. An array of candidates: `[ { aadharNo: ... }, { aadharNo: ... } ]`
+ * 2. An object with a `candidates` array: `{ candidates: [ ... ] }`
+ * 3. A single candidate object: `{ aadharNo: ... }`
+ */
+export const publicAddCandidatesInputSchema = z.union([
+  z
+    .array(publicAddCandidateSchema)
+    .min(1, { error: "Array must contain at least one candidate" }),
+  z.object({
+    candidates: z.array(publicAddCandidateSchema).min(1, {
+      error: "candidates array must contain at least one candidate",
+    }),
+  }),
+  publicAddCandidateSchema,
+]);
+
+export type PublicAddCandidatesInput = z.infer<
+  typeof publicAddCandidatesInputSchema
+>;
