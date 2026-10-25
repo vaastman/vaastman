@@ -46,3 +46,21 @@ What it does:
   3. Sends an email from 'Vaastman <noreply@id0.uk>' with the PDF attached.
   4. On successful delivery, marks 'isOfferLetterSent = true' and
      'offerLetterSentAt = NOW()' so duplicate emails are never sent.
+
+--------------------------------------------------------------------------------
+DELETE CANDIDATES BY SOURCE SCRIPT
+--------------------------------------------------------------------------------
+
+Description:
+  Deletes all candidates and their associated records (educations, certifications,
+  and payments) from the database where 'registrationSource' matches the target.
+  Defaults to 'api-gForm' if no source argument is specified.
+
+Commands to run:
+  # Deletes candidates with registrationSource = "api-gForm"
+  bun run delete-api-candidates
+  # OR directly:
+  bun run scripts/delete-candidates-by-source.ts
+
+  # Or to delete from a custom source:
+  bun run scripts/delete-candidates-by-source.ts <source_name>

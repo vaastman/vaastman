@@ -18,13 +18,21 @@ const services = [
   { label: "Tech Consulting", href: "#" },
 ];
 
+const studentPortalLinks = [
+  { label: "Download Offer Letter", href: "/download/offer-letter" },
+  { label: "Update Registration Details", href: "/candidate/update" },
+  { label: "Download Certificate", href: "/download/internship" },
+  { label: "Candidate Registration", href: "/add/candidate" },
+  { label: "Verify Certificate", href: "/verify/internship" },
+];
+
 const company = [
   { label: "About Us", href: "#" },
   { label: "Our Work", href: "#" },
   { label: "Careers", href: "#" },
   { label: "Blog", href: "#" },
-  { label: "Privacy Policy", href: "#" },
-  { label: "Terms of Service", href: "#" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Service", href: "/terms" },
 ];
 
 const socials = [
@@ -54,7 +62,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto w-[90%] py-12">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="flex flex-col gap-4">
             <Link href="/home" className="w-fit">
@@ -84,6 +92,25 @@ export function Footer() {
                 </a>
               ))}
             </div>
+          </div>
+
+          {/* Student Portal */}
+          <div className="flex flex-col gap-4">
+            <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">
+              Student Portal
+            </h4>
+            <ul className="flex flex-col gap-2">
+              {studentPortalLinks.map(({ label, href }) => (
+                <li key={label}>
+                  <Link
+                    href={href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Services */}

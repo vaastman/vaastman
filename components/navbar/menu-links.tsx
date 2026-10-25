@@ -40,14 +40,33 @@ function DesktopMenuItem({ item }: { item: MenuItem }) {
   );
 }
 
-function MobileMenuItem({ item }: { item: MenuItem }) {
+import { IconChevronRight } from "@tabler/icons-react";
+
+function MobileMenuItem({
+  item,
+  onNavigate,
+}: {
+  item: MenuItem;
+  onNavigate?: () => void;
+}) {
   if (item.items) {
     return (
-      <AccordionItem key={item.title} value={item.title} className="border-b-0">
-        <AccordionTrigger className="text-md py-0 font-semibold hover:no-underline">
-          {item.title}
+      <AccordionItem
+        key={item.title}
+        value={item.title}
+        className="border-none"
+      >
+        <AccordionTrigger className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted/70 hover:no-underline transition-colors">
+          <div className="flex items-center gap-3">
+            {item.icon ? (
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                {item.icon}
+              </div>
+            ) : null}
+            <span>{item.title}</span>
+          </div>
         </AccordionTrigger>
-        <AccordionContent className="mt-2">
+        <AccordionContent className="mt-1 flex flex-col gap-1 pl-4">
           {item.items.map((subItem) => (
             <SubMenuLink key={subItem.title} item={subItem} />
           ))}
@@ -57,8 +76,21 @@ function MobileMenuItem({ item }: { item: MenuItem }) {
   }
 
   return (
-    <Link key={item.title} href={item.url} className="text-md font-semibold">
-      {item.title}
+    <Link
+      key={item.title}
+      href={item.url}
+      onClick={onNavigate}
+      className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted/80 hover:text-primary active:scale-[0.98]"
+    >
+      <div className="flex items-center gap-3">
+        {item.icon ? (
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+            {item.icon}
+          </div>
+        ) : null}
+        <span className="font-semibold">{item.title}</span>
+      </div>
+      <IconChevronRight className="size-4 text-muted-foreground/50 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
     </Link>
   );
 }

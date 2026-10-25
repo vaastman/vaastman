@@ -2,7 +2,7 @@
 
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ErrorDisplay } from "@/components/error-display";
 import { LoaderScreen } from "@/components/loader-screen";
@@ -32,6 +32,9 @@ export default function Page() {
 
   const candidateId = params.id as string;
 
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("mode") === "edit";
+
   // Fetch existing candidate progress (personal + education data)
   const {
     data: progress,
@@ -47,9 +50,9 @@ export default function Page() {
     }
   }, [candidateId, router.replace]);
 
-  // If already completed both, redirect to success page
+  // If already completed both, redirect to success page (unless in edit mode)
   useEffect(() => {
-    if (!progress || !candidateId) return;
+    if (!progress || !candidateId || isEditMode) return;
 
     const hasPersonal = Boolean(progress.personal);
     const hasEducation = Boolean(progress.education);
@@ -57,7 +60,7 @@ export default function Page() {
     if (hasPersonal && hasEducation) {
       router.replace(`/add/candidate/${candidateId}/success`);
     }
-  }, [progress, candidateId, router.replace]);
+  }, [progress, candidateId, router.replace, isEditMode]);
 
   if (isUniversityOptionsPending || isProgressPending) {
     return <LoaderScreen message="Loading..." />;
@@ -79,13 +82,17 @@ export default function Page() {
           variant="link"
           className="w-fit self-start gap-2 px-0 text-muted-foreground hover:bg-transparent hover:text-foreground sm:self-auto"
         >
-          <Link href="/home">
+          <Link href={isEditMode ? "/candidate/update" : "/home"}>
             <IconArrowLeft className="size-5" data-icon="inline-start" />
             Back
           </Link>
         </Button>
 
-        <h3 className="m-0 w-full text-center">Candidate Information</h3>
+        <h3 className="m-0 w-full text-center">
+          {isEditMode
+            ? "Update Candidate Information"
+            : "Candidate Information"}
+        </h3>
 
         <div className="hidden h-10 w-[85px] sm:block" aria-hidden="true" />
       </div>

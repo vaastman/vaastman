@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  IconCertificate,
+  IconEdit,
+  IconFileTextFilled,
+  IconLogin,
+  IconRosetteDiscountCheckFilled,
+  IconUserPlus,
+} from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { authClient } from "@/lib/auth-client";
@@ -16,10 +24,36 @@ function Navbar1({
     title: "Vaastman",
   },
   menu = [
-    { title: "Candidate Registration", url: "/add/candidate" },
-    { title: "Verify Certificate", url: "/verify/internship" },
-    { title: "Download Certificate", url: "/download/internship" },
-    { title: "Sign In", url: "/signin" },
+    {
+      title: "Offer Letter",
+      url: "/download/offer-letter",
+      icon: <IconFileTextFilled className="size-5" />,
+    },
+    {
+      title: "Update Details",
+      url: "/candidate/update",
+      icon: <IconEdit className="size-5" />,
+    },
+    {
+      title: "Download Certificate",
+      url: "/download/internship",
+      icon: <IconCertificate className="size-5" />,
+    },
+    {
+      title: "Candidate Registration",
+      url: "/add/candidate",
+      icon: <IconUserPlus className="size-5" />,
+    },
+    {
+      title: "Verify Certificate",
+      url: "/verify/internship",
+      icon: <IconRosetteDiscountCheckFilled className="size-5" />,
+    },
+    {
+      title: "Sign In",
+      url: "/signin",
+      icon: <IconLogin className="size-5" />,
+    },
   ],
   auth = {
     signin: { title: "Sign In", url: "/signin" },
