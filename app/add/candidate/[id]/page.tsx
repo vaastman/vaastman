@@ -3,7 +3,7 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/error-display";
 import { LoaderScreen } from "@/components/loader-screen";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,14 @@ export default function Page() {
   const candidateId = params.id as string;
 
   const searchParams = useSearchParams();
-  const isEditMode = searchParams.get("mode") === "edit";
+  const isEditModeParam = searchParams.get("mode") === "edit";
+  const [isEditMode, setIsEditMode] = useState(isEditModeParam);
+
+  useEffect(() => {
+    if (isEditModeParam) {
+      setIsEditMode(true);
+    }
+  }, [isEditModeParam]);
 
   // Fetch existing candidate progress (personal + education data)
   const {
@@ -50,9 +57,9 @@ export default function Page() {
     }
   }, [candidateId, router.replace]);
 
-  // If already completed both, redirect to success page (unless in edit mode)
+  // If already completed both, redirect to success page (never redirect if in edit mode)
   useEffect(() => {
-    if (!progress || !candidateId || isEditMode) return;
+    if (!progress || !candidateId || isEditMode || isEditModeParam) return;
 
     const hasPersonal = Boolean(progress.personal);
     const hasEducation = Boolean(progress.education);
@@ -60,7 +67,7 @@ export default function Page() {
     if (hasPersonal && hasEducation) {
       router.replace(`/add/candidate/${candidateId}/success`);
     }
-  }, [progress, candidateId, router.replace, isEditMode]);
+  }, [progress, candidateId, router.replace, isEditMode, isEditModeParam]);
 
   if (isUniversityOptionsPending || isProgressPending) {
     return <LoaderScreen message="Loading..." />;
@@ -99,6 +106,7 @@ export default function Page() {
 
       <CandidateForm
         candidateId={candidateId}
+        isEditMode={Boolean(isEditMode || isEditModeParam)}
         existingPersonal={progress?.personal ?? null}
         existingEducation={
           (progress?.education as EducationWithCollege | undefined) ?? null

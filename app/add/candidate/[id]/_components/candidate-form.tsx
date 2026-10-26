@@ -7,9 +7,9 @@ import {
   IconSchoolFilled,
   IconUserFilled,
 } from "@tabler/icons-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { type FieldErrors, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,14 @@ import { useCandidateDraftStore } from "../lib/use-candidate-draft-store";
 import {
   type AddCandidateSchema,
   addCandidateSchema,
+  EDUCATION_FIELDS,
   PERSONAL_FIELDS,
 } from "../lib/zod-type/candidate";
+import type { AddCandidateEducationSchema } from "../lib/zod-type/candidate-education";
+import type { AddCandidatePersonalSchema } from "../lib/zod-type/candidate-personal";
 import { useAddCandidate } from "../query/mut-add-candidate";
+import { useAddCandidateEducation } from "../query/mut-add-candidate-education";
+import { useAddCandidatePersonal } from "../query/mut-add-candidate-personal";
 import { FirstTwoRow as EducationFirstTwoRow } from "./education_candidate/first-2-row";
 import { SecondTwoRow as EducationSecondTwoRow } from "./education_candidate/second-2-row";
 import { AadharUploadRow } from "./personal_candidate/aadhar-upload-row";
@@ -47,14 +52,15 @@ type ValidTab = "personal" | "education";
 
 export function CandidateForm({
   candidateId,
+  isEditMode = false,
   existingPersonal,
   existingEducation,
 }: {
   candidateId: string;
+  isEditMode?: boolean;
   existingPersonal: Candidate_Personal | null;
   existingEducation: EducationWithCollege | null;
 }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const initialTab: ValidTab =
@@ -65,7 +71,7 @@ export function CandidateForm({
   const setDraft = useCandidateDraftStore((s) => s.setDraft);
   const clearDraft = useCandidateDraftStore((s) => s.clearDraft);
 
-  const isEdit = Boolean(existingPersonal && existingEducation);
+  const isEdit = Boolean(isEditMode || (existingPersonal && existingEducation));
 
   const defaultValues = useMemo<AddCandidateSchema>(
     () => ({
@@ -97,43 +103,75 @@ export function CandidateForm({
     defaultValues,
   });
 
-  const { mutateAsync: addCandidate, isPending } = useAddCandidate({
-    candidateId,
-  });
+  const { mutateAsync: addCandidate, isPending: isAllPending } =
+    useAddCandidate({
+      candidateId,
+      isEditMode,
+    });
+
+  const { mutateAsync: addPersonal, isPending: isPersonalPending } =
+    useAddCandidatePersonal({
+      candidateId,
+      isEditMode,
+    });
+
+  const { mutateAsync: addEducation, isPending: isEducationPending } =
+    useAddCandidateEducation({
+      candidateId,
+      isEditMode,
+    });
 
   const updateTab = useCallback(
     (tab: ValidTab) => {
       setCurrentTab(tab);
-      router.replace(`/add/candidate/${candidateId}?tab=${tab}`, {
-        scroll: false,
-      });
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", tab);
+        if (isEditMode) {
+          url.searchParams.set("mode", "edit");
+        }
+        window.history.replaceState(null, "", url.toString());
+      }
     },
-    [candidateId, router],
+    [isEditMode],
   );
 
   // Rehydrate draft from Zustand localStorage store on mount
   useEffect(() => {
-    const drafts = useCandidateDraftStore.getState().drafts;
-    const candidateDraft = drafts[candidateId];
-    if (candidateDraft && Object.keys(candidateDraft).length > 0) {
-      form.reset({
-        ...defaultValues,
-        ...candidateDraft,
-        id: candidateId,
-      });
+    if (isEdit) {
+      // In edit mode, ensure form starts with the database record values
+      form.reset(defaultValues);
+    } else {
+      const drafts = useCandidateDraftStore.getState().drafts;
+      const candidateDraft = drafts[candidateId];
+      if (candidateDraft && Object.keys(candidateDraft).length > 0) {
+        form.reset({
+          ...defaultValues,
+          ...candidateDraft,
+          id: candidateId,
+        });
+      }
     }
 
     // If starting on education tab, verify personal data exists, else fallback to personal
     if (tabParam === "education") {
       const hasPersonalData =
-        Boolean(candidateDraft?.name || existingPersonal?.name) &&
-        Boolean(candidateDraft?.email || existingPersonal?.email);
+        Boolean(existingPersonal?.name) ||
+        Boolean(useCandidateDraftStore.getState().drafts[candidateId]?.name);
 
-      if (!hasPersonalData) {
+      if (!hasPersonalData && !isEdit) {
         updateTab("personal");
       }
     }
-  }, [candidateId, defaultValues, existingPersonal, form, tabParam, updateTab]);
+  }, [
+    candidateId,
+    defaultValues,
+    existingPersonal,
+    form,
+    tabParam,
+    updateTab,
+    isEdit,
+  ]);
 
   // Sync form changes to Zustand draft store in real time
   useEffect(() => {
@@ -144,18 +182,20 @@ export function CandidateForm({
   }, [form, candidateId, setDraft]);
 
   const handleNextToEducation = async () => {
-    const isValid = await form.trigger(
-      PERSONAL_FIELDS as unknown as (keyof AddCandidateSchema)[],
-    );
-    if (!isValid) {
-      toast.error("Please fill in all required personal details.");
-      return;
+    if (!isEdit) {
+      const isValid = await form.trigger(
+        PERSONAL_FIELDS as unknown as (keyof AddCandidateSchema)[],
+      );
+      if (!isValid) {
+        toast.error("Please fill in all required personal details.");
+        return;
+      }
     }
     updateTab("education");
   };
 
   const handleTabChange = async (newTab: string) => {
-    if (newTab === "education") {
+    if (!isEdit && newTab === "education") {
       const isValid = await form.trigger(
         PERSONAL_FIELDS as unknown as (keyof AddCandidateSchema)[],
       );
@@ -167,26 +207,112 @@ export function CandidateForm({
     updateTab(newTab as ValidTab);
   };
 
-  const onSubmit = async (data: AddCandidateSchema) => {
-    await addCandidate(data);
+  const handleSavePersonalOnly = async () => {
+    const isValid = await form.trigger(
+      PERSONAL_FIELDS as unknown as (keyof AddCandidateSchema)[],
+    );
+    if (!isValid) {
+      toast.error("Please complete all required personal details.");
+      return;
+    }
+
+    const values = form.getValues();
+    const personalData: AddCandidatePersonalSchema = {
+      id: candidateId,
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      fatherName: values.fatherName,
+      aadharNo: values.aadharNo,
+      profilePhoto: values.profilePhoto,
+      aadharPhoto: values.aadharPhoto,
+      gender: values.gender,
+      dateOfBirth: values.dateOfBirth,
+    };
+
+    await addPersonal(personalData);
     clearDraft(candidateId);
   };
 
-  const onInvalid = (errors: FieldErrors<AddCandidateSchema>) => {
-    const hasPersonalErrors = PERSONAL_FIELDS.some((field) =>
-      Boolean(errors[field as keyof AddCandidateSchema]),
+  const handleSaveEducationOrAll = async () => {
+    if (!isEdit) {
+      const isValid = await form.trigger();
+      if (!isValid) {
+        const errors = form.formState.errors;
+        const hasPersonalErrors = PERSONAL_FIELDS.some((field) =>
+          Boolean(errors[field as keyof AddCandidateSchema]),
+        );
+        if (hasPersonalErrors) {
+          updateTab("personal");
+          toast.error("Please complete all required personal details.");
+        } else {
+          toast.error("Please complete all required education details.");
+        }
+        return;
+      }
+      await addCandidate(form.getValues());
+      clearDraft(candidateId);
+      return;
+    }
+
+    // In EDIT mode:
+    // First validate education fields
+    const isEduValid = await form.trigger(
+      EDUCATION_FIELDS as unknown as (keyof AddCandidateSchema)[],
+    );
+    if (!isEduValid) {
+      toast.error("Please complete all required education details.");
+      return;
+    }
+
+    const values = form.getValues();
+
+    // Check if personal fields are also valid
+    const isPersonalValid = await form.trigger(
+      PERSONAL_FIELDS as unknown as (keyof AddCandidateSchema)[],
     );
 
-    if (hasPersonalErrors) {
-      updateTab("personal");
-      toast.error("Please complete all required personal details.");
+    if (isPersonalValid) {
+      // Both are valid -> update all details in one transaction
+      await addCandidate(values);
+      clearDraft(candidateId);
     } else {
-      toast.error("Please complete all required education details.");
+      // Personal fields may have legacy validation issues or were not modified,
+      // but candidate specifically wanted to update education details
+      const educationData: AddCandidateEducationSchema = {
+        id: candidateId,
+        universityRoll: values.universityRoll,
+        collegeRoll: values.collegeRoll,
+        universityId: values.universityId,
+        collegeId: values.collegeId,
+        collegeSessionId: values.collegeSessionId,
+        duration: values.duration,
+        course: values.course,
+        domainOrMainSubject: values.domainOrMainSubject,
+        mjcSubject: values.mjcSubject,
+      };
+      await addEducation(educationData);
+      clearDraft(candidateId);
     }
   };
 
+  const isSaving = isAllPending || isPersonalPending || isEducationPending;
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (currentTab === "personal") {
+          if (isEdit) {
+            handleSavePersonalOnly();
+          } else {
+            handleNextToEducation();
+          }
+        } else {
+          handleSaveEducationOrAll();
+        }
+      }}
+    >
       <Tabs
         value={currentTab}
         onValueChange={handleTabChange}
@@ -217,16 +343,44 @@ export function CandidateForm({
                 <AadharUploadRow form={form} />
               </div>
             </CardContent>
-            <CardFooter className="justify-end">
-              <Button
-                type="button"
-                size="lg"
-                className="px-8 text-base"
-                onClick={handleNextToEducation}
-              >
-                Next: Education Details
-                <IconArrowRight className="size-5" data-icon="inline-end" />
-              </Button>
+            <CardFooter
+              className={isEdit ? "flex justify-between gap-4" : "justify-end"}
+            >
+              {isEdit ? (
+                <>
+                  <Button
+                    type="button"
+                    disabled={isSaving}
+                    size="lg"
+                    className="px-6 text-base cursor-pointer"
+                    onClick={handleSavePersonalOnly}
+                  >
+                    <LoadingSwap isLoading={isPersonalPending}>
+                      Update Personal Details
+                    </LoadingSwap>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className="px-6 text-base cursor-pointer"
+                    onClick={handleNextToEducation}
+                  >
+                    Next: Education Details
+                    <IconArrowRight className="size-5" data-icon="inline-end" />
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  type="button"
+                  size="lg"
+                  className="px-8 text-base cursor-pointer"
+                  onClick={handleNextToEducation}
+                >
+                  Next: Education Details
+                  <IconArrowRight className="size-5" data-icon="inline-end" />
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </TabsContent>
@@ -249,20 +403,21 @@ export function CandidateForm({
                 type="button"
                 variant="outline"
                 size="lg"
-                className="px-6 text-base"
+                className="px-6 text-base cursor-pointer"
                 onClick={() => updateTab("personal")}
               >
                 <IconArrowLeft className="size-5" data-icon="inline-start" />
                 Back to Personal
               </Button>
               <Button
-                disabled={isPending}
-                type="submit"
+                disabled={isSaving}
+                type="button"
                 size="lg"
-                className="px-8 text-base"
+                className="px-8 text-base cursor-pointer"
+                onClick={handleSaveEducationOrAll}
               >
-                <LoadingSwap isLoading={isPending}>
-                  {isEdit ? "Update All Details" : "Save All Details"}
+                <LoadingSwap isLoading={isEducationPending || isAllPending}>
+                  {isEdit ? "Update Education Details" : "Save All Details"}
                 </LoadingSwap>
               </Button>
             </CardFooter>

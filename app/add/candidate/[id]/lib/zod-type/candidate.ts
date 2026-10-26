@@ -21,3 +21,17 @@ export const PERSONAL_FIELDS = [
 ] as const;
 
 export type PersonalFieldName = (typeof PERSONAL_FIELDS)[number];
+
+export const EDUCATION_FIELDS = [
+  "universityRoll",
+  "collegeRoll",
+  "universityId",
+  "collegeId",
+  "collegeSessionId",
+  "duration",
+  "course",
+  "domainOrMainSubject",
+  "mjcSubject",
+] as const;
+
+export type EducationFieldName = (typeof EDUCATION_FIELDS)[number];

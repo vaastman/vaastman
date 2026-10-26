@@ -5,7 +5,13 @@ import { addCandidateAction } from "../lib/actions";
 import { useCandidateDraftStore } from "../lib/use-candidate-draft-store";
 import type { AddCandidateSchema } from "../lib/zod-type/candidate";
 
-export function useAddCandidate({ candidateId }: { candidateId: string }) {
+export function useAddCandidate({
+  candidateId,
+  isEditMode,
+}: {
+  candidateId: string;
+  isEditMode?: boolean;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -28,7 +34,11 @@ export function useAddCandidate({ candidateId }: { candidateId: string }) {
       queryClient.invalidateQueries({
         queryKey: ["candidate-progress", candidateId],
       });
-      toast.success("Candidate details saved successfully.");
+      toast.success(
+        isEditMode
+          ? "Candidate details updated successfully."
+          : "Candidate details saved successfully.",
+      );
       router.push(`/add/candidate/${candidateId}/success`);
     },
     onError: (error) => {
