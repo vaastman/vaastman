@@ -6,6 +6,7 @@ import {
   IconHomeFilled,
   IconLayoutDashboardFilled,
   IconSchoolFilled,
+  IconUserFilled,
   IconUsers,
 } from "@tabler/icons-react";
 import type { ComponentType } from "react";
@@ -38,6 +39,12 @@ export function getMenuList(_pathname: string): Group[] {
           href: "/dashboard",
           label: "Dashboard",
           icon: IconLayoutDashboardFilled,
+          submenus: [],
+        },
+        {
+          href: "/students",
+          label: "Students",
+          icon: IconUserFilled,
           submenus: [],
         },
       ],
