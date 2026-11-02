@@ -20,7 +20,20 @@ export async function getCollegeInfo() {
     const data = await prisma.college.findMany({
       include: {
         domains: true,
-        sessions: true,
+        sessions: {
+          include: {
+            _count: {
+              select: {
+                candidateEducations: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            candidateEducations: true,
+          },
+        },
       },
     });
 
