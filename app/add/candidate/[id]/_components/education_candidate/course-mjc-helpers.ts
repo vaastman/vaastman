@@ -30,6 +30,10 @@ export const COURSE_MJC_MAP: Record<
       label: "AIAS (Ancient Indian & Asian Studies)",
       value: "AIAS",
     },
+    {
+      label: "Ancient History, Culture and Archaeology",
+      value: "ANCIENT_HISTORY_CULTURE_AND_ARCHAEOLOGY",
+    },
     { label: "Sanskrit", value: "SANSKRIT" },
     { label: "Political Science", value: "POLITICAL_SCIENCE" },
     { label: "Economics", value: "ECONOMICS" },
